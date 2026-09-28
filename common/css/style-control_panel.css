@@ -81,6 +81,43 @@ body.browser-source.lower-thirds{
 .main-title.switch-left {
   margin-left: 30px;
 }
+
+/* Whether the browser source (the output) is running */
+.output-status {
+  position: absolute;
+  top: 1px;
+  left: 110px;
+  padding: 0 5px;
+  border-radius: 3px;
+  font-size: 9px;
+  font-weight: 900;
+  line-height: 15px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.output-status::before {
+  content: "\25CF\00A0";
+}
+.output-status.connected {
+  color: rgb(60,200,90);
+}
+.output-status.checking {
+  color: var(--main-color);
+}
+.output-status.disconnected {
+  background: rgb(255,166,0);
+  color: #000000;
+}
+.output-help {
+  margin: 8px 2px 2px;
+  padding: 5px 7px;
+  border-left: 3px solid rgb(255,166,0);
+  font-size: 11px;
+  line-height: 1.4;
+}
+.output-help.hide {
+  display: none;
+}
 .main-icon {
   float: left;
   box-sizing: border-box;

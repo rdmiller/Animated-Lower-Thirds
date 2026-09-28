@@ -23,6 +23,7 @@
 				<div class="main-title">
 					<div class="main-icon icon icon-settings"></div>
 					<div>Main settings</div>					
+					<div id="output-status" class="output-status checking" role="status">Checking…</div>
 				</div>
 				<label class="accordion"></label>
 				<div id="global-configuration" class="hidable">
@@ -120,6 +121,9 @@
 							</div>
 						</div>
 					</div>
+				</div>
+				<div id="output-help" class="output-help hide">
+					The lower thirds output isn't running. Add <b>lower thirds/browser-source.html</b> to your scene as a Browser Source in OBS, and make sure its scene is active (or turn off "Shutdown source when not visible").
 				</div>
 			</div>
 
@@ -1570,6 +1574,23 @@
 			//////////////////////////////////////
 
 			//Receive data from the source
+			//Output status: the browser source sends its status every second while it runs. Preview-mode
+			//sources (like the preview window) don't, they only ask for a resend when they load.
+			const OUTPUT_TIMEOUT = 3000;
+			const panelLoadedAt = Date.now();
+			let lastOutputMessage = 0;
+
+			function updateOutputStatus() {
+				const now = Date.now();
+				const connected = now - lastOutputMessage < OUTPUT_TIMEOUT;
+				const checking = !connected && now - panelLoadedAt < OUTPUT_TIMEOUT;
+				const status = byId("output-status");
+				status.className = "output-status " + (connected ? "connected" : checking ? "checking" : "disconnected");
+				status.textContent = connected ? "Output OK" : checking ? "Checking…" : "No output";
+				byId("output-help").classList.toggle("hide", connected || checking);
+			}
+			setInterval(updateOutputStatus, 1000);
+
 			bcr.onmessage = function (ev) {
 				const received_data = ev.data;
 
@@ -1577,6 +1598,9 @@
 					refreshData();
 					function_send_font();
 				} else {
+					lastOutputMessage = Date.now();
+					updateOutputStatus();
+
 
 					for (let n = 1; n <= LOWER_THIRDS_COUNT; n++) {
 						lowerThirds[n].active_time_monitor = received_data["activeTime" + n + "_to_send"];
