@@ -1137,6 +1137,20 @@
 				</div>
 			</div>
 
+			<div id="import-error" class="center hide" >
+				<div class="export-data-bg" onclick="okImportErrorPopup()"></div>
+				<div class="form-input">
+					<div>
+						<h1>Import failed</h1>
+						<p id="import-error-message"></p>
+						<p>Your current settings have not been changed.</p>
+					</div>
+					<div class="export-btns">
+						<div class="btn-ok-export" onclick="okImportErrorPopup()">Ok</div>
+					</div>
+				</div>
+			</div>
+
 			<div id="reset-all" class="center hide" >
 				<div class="reset-all-bg" onclick="cancelResetPopup()"></div>
 				<div class="form-input">
@@ -2112,6 +2126,15 @@
 			}
 			function okExportPopup() {
 				document.getElementById("export-data").classList.add("hide");
+			}
+
+			//Import error popup info
+			function openImportErrorPopup(message) {
+				document.getElementById("import-error-message").textContent = message;
+				document.getElementById("import-error").classList.remove("hide");
+			}
+			function okImportErrorPopup() {
+				document.getElementById("import-error").classList.add("hide");
 			}
 
 			//Load new logo image
@@ -3424,11 +3447,21 @@
 			//Read txt file and call writeLocalStorage function
 			document.getElementById('importFile').onchange = function(){
 				var file = this.files[0];
+				this.value = ""; //Allow importing the same file again
+				if (!file) {
+					return;
+				}
 				var reader = new FileReader();
 				reader.onload = function(progressEvent){
-					localStorage.clear();
-					
-					writeLocalStorage(this.result);
+					var error = writeLocalStorage(this.result);
+					if (error) {
+						openImportErrorPopup(error);
+					} else {
+						location.reload();
+					}
+				};
+				reader.onerror = function(){
+					openImportErrorPopup("The file could not be read.");
 				};
 				reader.readAsText(file);
 			};
@@ -3560,16 +3593,49 @@
 				return s;
 			}
 
-			//Save data to localStorage
+			//Replace localStorage with an imported backup, but only if the backup is valid.
+			//Returns an error message, or null on success. The current data is kept on any error.
 			function writeLocalStorage(data) {
-				var o = JSON.parse(data);
-				for (var property in o) {
-					if (o.hasOwnProperty(property)) {
-						localStorage.setItem(property, o[property]);
+				var o;
+				try {
+					o = JSON.parse(data);
+				} catch (e) {
+					return "The file is not a backup exported from this control panel (it is not valid exported data).";
+				}
+				if (o === null || typeof o !== "object" || Array.isArray(o)) {
+					return "The file is not a backup exported from this control panel (it does not contain a list of settings).";
+				}
+
+				var keys = Object.keys(o);
+				for (var i = 0; i < keys.length; i++) {
+					var type = typeof o[keys[i]];
+					if (type !== "string" && type !== "number" && type !== "boolean") {
+						return "The file is not a valid backup: the setting \"" + keys[i] + "\" has an unexpected value.";
 					}
 				}
-				location.reload();
-        	}
+
+				//Most settings are stored under the id of their control, so a real backup always matches some
+				if (!keys.some(function(key) { return document.getElementById(key); })) {
+					return "The file does not contain any settings of this control panel.";
+				}
+
+				var previousData = getLocalStorage();
+				try {
+					localStorage.clear();
+					keys.forEach(function(key) {
+						localStorage.setItem(key, String(o[key]));
+					});
+				} catch (e) {
+					//e.g. the backup is larger than the storage quota: put the previous data back
+					localStorage.clear();
+					var previous = JSON.parse(previousData);
+					for (var key in previous) {
+						localStorage.setItem(key, previous[key]);
+					}
+					return "The backup could not be stored (" + e.message + ").";
+				}
+				return null;
+			}
 
 			//Copy all data to clipboard
 			function exportData() {
