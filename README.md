@@ -13,7 +13,7 @@ This project is based on [Lower thirds in HTML/CSS](https://obsproject.com/forum
 - Include dynamic content to streaming app with browser support (like OBS)
 - 4 differents Lower Thirds at same time
 - 10 slots for each Lower Third (Same configuration but with different title, description and logo)
-- 3 predefined styles
+- 4 predefined styles
 - Highly customizable (colors, fonts, timing, automation, ...)
 
 ## Installation

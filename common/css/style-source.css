@@ -22,6 +22,56 @@
 	--alt-4-animation-time: 4s;
 }
 
+/* Per-lower-third aliases, so a style can be written once for all four */
+#lower-third-1 {
+	--lt-animation-time: var(--alt-1-animation-time);
+	--lt-name-size: var(--alt-1-name-size);
+	--lt-info-size: var(--alt-1-info-size);
+	--lt-style-color-1: var(--alt-1-style-color-1);
+	--lt-style-color-2: var(--alt-1-style-color-2);
+	--lt-style-color-3: var(--alt-1-style-color-3);
+	--lt-style-color-4: var(--alt-1-style-color-4);
+	--lt-border-thickness: var(--alt-1-border_thickness_amount);
+	--lt-corners: var(--alt-1-corners);
+	--lt-shadows-graph: var(--alt-1-shadows-graph);
+}
+#lower-third-2 {
+	--lt-animation-time: var(--alt-2-animation-time);
+	--lt-name-size: var(--alt-2-name-size);
+	--lt-info-size: var(--alt-2-info-size);
+	--lt-style-color-1: var(--alt-2-style-color-1);
+	--lt-style-color-2: var(--alt-2-style-color-2);
+	--lt-style-color-3: var(--alt-2-style-color-3);
+	--lt-style-color-4: var(--alt-2-style-color-4);
+	--lt-border-thickness: var(--alt-2-border_thickness_amount);
+	--lt-corners: var(--alt-2-corners);
+	--lt-shadows-graph: var(--alt-2-shadows-graph);
+}
+#lower-third-3 {
+	--lt-animation-time: var(--alt-3-animation-time);
+	--lt-name-size: var(--alt-3-name-size);
+	--lt-info-size: var(--alt-3-info-size);
+	--lt-style-color-1: var(--alt-3-style-color-1);
+	--lt-style-color-2: var(--alt-3-style-color-2);
+	--lt-style-color-3: var(--alt-3-style-color-3);
+	--lt-style-color-4: var(--alt-3-style-color-4);
+	--lt-border-thickness: var(--alt-3-border_thickness_amount);
+	--lt-corners: var(--alt-3-corners);
+	--lt-shadows-graph: var(--alt-3-shadows-graph);
+}
+#lower-third-4 {
+	--lt-animation-time: var(--alt-4-animation-time);
+	--lt-name-size: var(--alt-4-name-size);
+	--lt-info-size: var(--alt-4-info-size);
+	--lt-style-color-1: var(--alt-4-style-color-1);
+	--lt-style-color-2: var(--alt-4-style-color-2);
+	--lt-style-color-3: var(--alt-4-style-color-3);
+	--lt-style-color-4: var(--alt-4-style-color-4);
+	--lt-border-thickness: var(--alt-4-border_thickness_amount);
+	--lt-corners: var(--alt-4-corners);
+	--lt-shadows-graph: var(--alt-4-shadows-graph);
+}
+
 body {
 	margin: 0;
 	line-height: 0;
@@ -741,114 +791,39 @@ body {
 
 @keyframes animation-style4-background {
 	from {
-	opacity: 0;
-	}
-}
-
-@keyframes animation-style4-background-out {
-	to {
 		opacity: 0;
 	}
 }
 
-@keyframes animation-style4-text-1 {
-	0% {
-		bottom: -110%;
-	}
-	70% {
-		bottom: -110%;
-	}
-	100% {
-		bottom: 0;
-	}
-}
+/* Background: fades in, and fades out as the exact mirror of the in-animation */
 
-@keyframes animation-style4-text-2 {
-	0% {
-		top: -110%;
-	}
-	70% {
-		top: -110%;
-	}
-	100% {
-		top: 0;
-	}
-}
-
-/* Style 4 add animations */
-
-/* Set cubic bezier for all elements */
-
-.animation-in.style-4 > .text-content {
+.animation-in.style-4 > .text-content,
+.animation-out.style-4 > .text-content {
+	animation-name: animation-style4-background;
+	animation-duration: var(--lt-animation-time);
 	animation-timing-function: cubic-bezier(1,-0.01,.45,1.01);
 }
-
-/* IN animations BACKGROUND */
-
-#lower-third-1.animation-in.style-4 > .text-content {
-	animation-name: animation-style4-background, animation-style4-text1;
-	animation-duration: var(--alt-1-animation-time);
-}
-#lower-third-2.animation-in.style-4 > .text-content {
-	animation-name: animation-style4-background;
-	animation-duration: var(--alt-2-animation-time);
-}
-#lower-third-3.animation-in.style-4 > .text-content {
-	animation-name: animation-style4-background;
-	animation-duration: var(--alt-3-animation-time);
-}
-#lower-third-4.animation-in.style-4 > .text-content {
-	animation-name: animation-style4-background;
-	animation-duration: var(--alt-4-animation-time);
-}
-
-
-/* OUT animations BACKGROUND */
-
-#lower-third-1.animation-out.style-4 > .text-content {
-	animation-name: animation-style4-background-out;
+.animation-out.style-4 > .text-content {
+	animation-direction: reverse;
 	animation-fill-mode: forwards;
-	animation-duration: var(--alt-1-animation-time);
-	animation-delay: 250ms;
-}
-#lower-third-2.animation-out.style-4 > .text-content {
-	animation-name: animation-style4-background-out;
-	animation-fill-mode: forwards;
-	animation-duration: var(--alt-2-animation-time);
-	animation-delay: 250ms;
-}
-#lower-third-3.animation-out.style-4 > .text-content {
-	animation-name: animation-style4-background-out;
-	animation-fill-mode: forwards;
-	animation-duration: var(--alt-3-animation-time);
-	animation-delay: 250ms;
-}
-#lower-third-4.animation-out.style-4 > .text-content {
-	animation-name: animation-style4-background-out;
-	animation-fill-mode: forwards;
-	animation-duration: var(--alt-3-animation-time);
 	animation-delay: 250ms;
 }
 
-/* TEXT ANIMATIONS */
-
-/* IN animations */
+/* Texts: same slide as style 3 */
 
 .animation-in.style-4 > .text-content > div:first-child div {
-	animation-name: animation-style4-text-1;
+	animation-name: animation-style3-text-1;
 }
 .animation-in.style-4 > .text-content > div:nth-child(2) div {
-	animation-name: animation-style4-text-2;
+	animation-name: animation-style3-text-2;
 	animation-delay: 200ms;
 }
-
-/* OUT animations */
 .animation-out.style-4 > .text-content > div:first-child div {
-	animation-name: animation-style4-text-1;
+	animation-name: animation-style3-text-1;
 	animation-delay: 200ms;
 }
 .animation-out.style-4 > .text-content > div:nth-child(2) div {
-	animation-name: animation-style4-text-2;
+	animation-name: animation-style3-text-2;
 }
 
 
@@ -1093,7 +1068,9 @@ body {
 }
 
 .style-2 > .graph-1,
-.style-2 > .graph-2 {
+.style-2 > .graph-2,
+.style-4 > .graph-1,
+.style-4 > .graph-2 {
 	display: none;
 }
 
@@ -1244,141 +1221,38 @@ body {
 
 /*****Style 4*****/
 
-#lower-third-1.style-4 > div.text-content > div:first-child {
-	height: calc(var(--alt-1-name-size) + 1.2rem);
-    padding: 0 0.2rem 0 0;
-}
-#lower-third-2.style-4 > div.text-content > div:first-child {
-	height: calc(var(--alt-2-name-size) + 1.2rem);
+/* The border sits on the mask itself, so its height grows by the border on
+   both sides to keep the padded text from being clipped. The height rules use
+   ids to override the base #lower-third-N text-mask height. */
+.style-4 > div.text-content > div:first-child,
+.style-4 > div.text-content > div:nth-child(2) {
 	padding: 0 0.2rem 0 0;
+	box-sizing: border-box;
+	border: solid var(--lt-border-thickness);
+	border-radius: var(--lt-corners);
+	box-shadow: var(--lt-shadows-graph);
 }
-#lower-third-3.style-4 > div.text-content > div:first-child {
-	height: calc(var(--alt-3-name-size) + 1.2rem);
-	padding: 0 0.2rem 0 0;
-}
+#lower-third-1.style-4 > div.text-content > div:first-child,
+#lower-third-2.style-4 > div.text-content > div:first-child,
+#lower-third-3.style-4 > div.text-content > div:first-child,
 #lower-third-4.style-4 > div.text-content > div:first-child {
-	height: calc(var(--alt-4-name-size) + 1.2rem);
-	padding: 0 0.2rem 0 0;
+	height: calc(var(--lt-name-size) + 1.2rem + 2 * var(--lt-border-thickness));
+	background: var(--lt-style-color-1);
+	border-color: var(--lt-style-color-3);
 }
-
-.style-4 > div.text-content > div:first-child div {
-	padding: 0.5rem 1.3rem;
-}
-.style-4 > div.text-content > div:first-child div::after {
-	content: "";
-	position: absolute;
-	width: 100%;
-	height: 100%;
-	top: 0;
-	left: 0;
-}
-
-#lower-third-1.style-4 > div.text-content > div:first-child {
-	background: var(--alt-1-style-color-1);
-	/* opacity: var(--alt-1-background); */
-	box-sizing: border-box;
-	border: solid var(--alt-1-border_thickness_amount);
-    border-color: var(--alt-1-style-color-3);
-	border-radius: var(--alt-1-corners);
-	box-shadow: var(--alt-1-shadows-graph);
-}
-#lower-third-2.style-4 > div.text-content > div:first-child {
-	background: var(--alt-2-style-color-1);
-	/* opacity: var(--alt-2-background); */
-	box-sizing: border-box;
-	border: solid var(--alt-2-border_thickness_amount);
-    border-color: var(--alt-2-style-color-3);
-	border-radius: var(--alt-2-corners);
-	box-shadow: var(--alt-2-shadows-graph);
-}
-#lower-third-3.style-4 > div.text-content > div:first-child {
-	background: var(--alt-3-style-color-1);
-	/* opacity: var(--alt-3-background); */
-	box-sizing: border-box;
-	border: solid var(--alt-3-border_thickness_amount);
-    border-color: var(--alt-3-style-color-3);
-	border-radius: var(--alt-3-corners);
-	box-shadow: var(--alt-3-shadows-graph);
-}
-#lower-third-4.style-4 > div.text-content > div:first-child {
-	background: var(--alt-4-style-color-1);
-	/* opacity: var(--alt-4-background); */
-	box-sizing: border-box;
-	border: solid var(--alt-4-border_thickness_amount);
-    border-color: var(--alt-4-style-color-3);
-	border-radius: var(--alt-4-corners);
-	box-shadow: var(--alt-4-shadows-graph);
-}
-
-#lower-third-1.style-4 > div.text-content > div:nth-child(2) {
-	height: calc(var(--alt-1-info-size) + 1.2rem);
-    padding: 0 0.2rem 0 0;
-}
-#lower-third-2.style-4 > div.text-content > div:nth-child(2) {
-	height: calc(var(--alt-2-info-size) + 1.2rem);
-	padding: 0 0.2rem 0 0;
-}
-#lower-third-3.style-4 > div.text-content > div:nth-child(2) {
-	height: calc(var(--alt-3-info-size) + 1.2rem);
-	padding: 0 0.2rem 0 0;
-}
+#lower-third-1.style-4 > div.text-content > div:nth-child(2),
+#lower-third-2.style-4 > div.text-content > div:nth-child(2),
+#lower-third-3.style-4 > div.text-content > div:nth-child(2),
 #lower-third-4.style-4 > div.text-content > div:nth-child(2) {
-	height: calc(var(--alt-4-info-size) + 1.2rem);
-	padding: 0 0.2rem 0 0;
+	height: calc(var(--lt-info-size) + 1.2rem + 2 * var(--lt-border-thickness));
+	background: var(--lt-style-color-2);
+	border-color: var(--lt-style-color-4);
 }
+
+.style-4 > div.text-content > div:first-child div,
 .style-4 > div.text-content > div:nth-child(2) div {
 	padding: 0.5rem 1.3rem;
 }
-.style-4 > div.text-content > div:nth-child(2) div::after {
-	content: "";
-	position: absolute;
-	width: 100%;
-	height: 100%;
-	top: 0;
-	left: 0;
-}
-
-#lower-third-1.style-4 > div.text-content > div:nth-child(2) {
-    background: var(--alt-1-style-color-2);
-	/* opacity: var(--alt-1-background); */
-	box-sizing: border-box;
-	border: solid var(--alt-1-border_thickness_amount);
-    border-color: var(--alt-1-style-color-4);
-	border-radius: var(--alt-1-corners);
-	box-shadow: var(--alt-1-shadows-graph);
-}
-#lower-third-2.style-4 > div.text-content > div:nth-child(2) {
-    background: var(--alt-2-style-color-2);
-	/* opacity: var(--alt-2-background); */
-	box-sizing: border-box;
-	border: solid var(--alt-2-border_thickness_amount);
-    border-color: var(--alt-2-style-color-4);
-	border-radius: var(--alt-2-corners);
-	box-shadow: var(--alt-2-shadows-graph);
-}
-#lower-third-3.style-4 > div.text-content > div:nth-child(2) {
-    background: var(--alt-3-style-color-2);
-	/* opacity: var(--alt-3-background); */
-	box-sizing: border-box;
-	border: solid var(--alt-3-border_thickness_amount);
-    border-color: var(--alt-3-style-color-4);
-	border-radius: var(--alt-3-corners);
-	box-shadow: var(--alt-3-shadows-graph);
-}
-#lower-third-4.style-4 > div.text-content > div:nth-child(2) {
-    background: var(--alt-4-style-color-2);
-	/* opacity: var(--alt-4-background); */
-	box-sizing: border-box;
-	border: solid var(--alt-4-border_thickness_amount);
-    border-color: var(--alt-4-style-color-4);
-	border-radius: var(--alt-4-corners);
-	box-shadow: var(--alt-4-shadows-graph);
-}
-.style-4 > .graph-1,
-.style-4 > .graph-2 {
-	display: none;
-}
-
 
 
 /*Graph2 animation*/

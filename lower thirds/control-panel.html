@@ -1137,6 +1137,20 @@
 				</div>
 			</div>
 
+			<div id="import-error" class="center hide" >
+				<div class="export-data-bg" onclick="okImportErrorPopup()"></div>
+				<div class="form-input">
+					<div>
+						<h1>Import failed</h1>
+						<p id="import-error-message"></p>
+						<p>Your current settings have not been changed.</p>
+					</div>
+					<div class="export-btns">
+						<div class="btn-ok-export" onclick="okImportErrorPopup()">Ok</div>
+					</div>
+				</div>
+			</div>
+
 			<div id="reset-all" class="center hide" >
 				<div class="reset-all-bg" onclick="cancelResetPopup()"></div>
 				<div class="form-input">
@@ -2114,6 +2128,15 @@
 				document.getElementById("export-data").classList.add("hide");
 			}
 
+			//Import error popup info
+			function openImportErrorPopup(message) {
+				document.getElementById("import-error-message").textContent = message;
+				document.getElementById("import-error").classList.remove("hide");
+			}
+			function okImportErrorPopup() {
+				document.getElementById("import-error").classList.add("hide");
+			}
+
 			//Load new logo image
 			function showPreview(element){
 				if(element.files.length > 0){
@@ -2255,9 +2278,9 @@
 					this.downTimer = setTimeout(function() {
 						    //Delete
 							document.getElementById(slot_id).classList.add("delete");
-							$('#' + name_id)[0].innerHTML = "";
-							$('#' + info_id)[0].innerHTML = "";
-							$('#' + logo_id)[0].innerHTML = "";
+							$('#' + name_id)[0].textContent = "";
+							$('#' + info_id)[0].textContent = "";
+							$('#' + logo_id)[0].textContent = "";
 							slotDeleted = true;
 					}, 600);
 				}).mouseup(function(e) {
@@ -2270,12 +2293,12 @@
 								const info_to_save = $(info + ":text").val();
 								const logo_to_save = $(logo).attr("src");
 								if (name_to_save && info_to_save){
-									$('#' + name_id)[0].innerHTML = name_to_save;
-									$('#' + info_id)[0].innerHTML = info_to_save;
+									$('#' + name_id)[0].textContent = name_to_save;
+									$('#' + info_id)[0].textContent = info_to_save;
 									if (is_default_logo){
-										$('#' + logo_id)[0].innerHTML = "default";
+										$('#' + logo_id)[0].textContent = "default";
 									} else {
-										$('#' + logo_id)[0].innerHTML = logo_to_save;
+										$('#' + logo_id)[0].textContent = logo_to_save;
 									}
 								}
 							} else {
@@ -2571,7 +2594,7 @@
 						//Disable: logo | Enable: align center;
 						document.getElementById("alt-1-align-center").disabled = false;
 						document.getElementById("alt-1-logo").disabled = true;
-						document.getElementById("alt-1-logo-size").disabled = false;
+						document.getElementById("alt-1-logo-size").disabled = true;
 						if (document.getElementById("alt-1-logo").checked){
 							$("#alt-1-logo").prop('checked', false).change();
 						}
@@ -2615,6 +2638,7 @@
 						//Disable: logo | Enable: align center;
 						document.getElementById("alt-2-align-center").disabled = false;
 						document.getElementById("alt-2-logo").disabled = true;
+						document.getElementById("alt-2-logo-size").disabled = true;
 						if (document.getElementById("alt-2-logo").checked){
 							$("#alt-2-logo").prop('checked', false).change();
 						}
@@ -2656,6 +2680,7 @@
 						//Disable: logo | Enable: align center;
 						document.getElementById("alt-3-align-center").disabled = false;
 						document.getElementById("alt-3-logo").disabled = true;
+						document.getElementById("alt-3-logo-size").disabled = true;
 						if (document.getElementById("alt-3-logo").checked){
 							$("#alt-3-logo").prop('checked', false).change();
 						}
@@ -2697,6 +2722,7 @@
 						//Disable: logo | Enable: align center;
 						document.getElementById("alt-4-align-center").disabled = false;
 						document.getElementById("alt-4-logo").disabled = true;
+						document.getElementById("alt-4-logo-size").disabled = true;
 						if (document.getElementById("alt-4-logo").checked){
 							$("#alt-4-logo").prop('checked', false).change();
 						}
@@ -2965,7 +2991,11 @@
 							}
 						} else {
 							if (isStored) {
-								$(this).prepend('<span class="tooltiptext">' + name_to_tooltip + '<br>' + info_to_tooltip + '<hr><p>Click and hold to delete.</p></span>');
+								// Slot text is user content: add it as text, never as HTML
+								const tooltip = $('<span class="tooltiptext"><br><hr><p>Click and hold to delete.</p></span>');
+								tooltip.prepend(document.createTextNode(name_to_tooltip));
+								tooltip.children('br').after(document.createTextNode(info_to_tooltip));
+								$(this).prepend(tooltip);
 							}
 						}
 
@@ -3424,11 +3454,21 @@
 			//Read txt file and call writeLocalStorage function
 			document.getElementById('importFile').onchange = function(){
 				var file = this.files[0];
+				this.value = ""; //Allow importing the same file again
+				if (!file) {
+					return;
+				}
 				var reader = new FileReader();
 				reader.onload = function(progressEvent){
-					localStorage.clear();
-					
-					writeLocalStorage(this.result);
+					var error = writeLocalStorage(this.result);
+					if (error) {
+						openImportErrorPopup(error);
+					} else {
+						location.reload();
+					}
+				};
+				reader.onerror = function(){
+					openImportErrorPopup("The file could not be read.");
 				};
 				reader.readAsText(file);
 			};
@@ -3560,16 +3600,49 @@
 				return s;
 			}
 
-			//Save data to localStorage
+			//Replace localStorage with an imported backup, but only if the backup is valid.
+			//Returns an error message, or null on success. The current data is kept on any error.
 			function writeLocalStorage(data) {
-				var o = JSON.parse(data);
-				for (var property in o) {
-					if (o.hasOwnProperty(property)) {
-						localStorage.setItem(property, o[property]);
+				var o;
+				try {
+					o = JSON.parse(data);
+				} catch (e) {
+					return "The file is not a backup exported from this control panel (it is not valid exported data).";
+				}
+				if (o === null || typeof o !== "object" || Array.isArray(o)) {
+					return "The file is not a backup exported from this control panel (it does not contain a list of settings).";
+				}
+
+				var keys = Object.keys(o);
+				for (var i = 0; i < keys.length; i++) {
+					var type = typeof o[keys[i]];
+					if (type !== "string" && type !== "number" && type !== "boolean") {
+						return "The file is not a valid backup: the setting \"" + keys[i] + "\" has an unexpected value.";
 					}
 				}
-				location.reload();
-        	}
+
+				//Most settings are stored under the id of their control, so a real backup always matches some
+				if (!keys.some(function(key) { return document.getElementById(key); })) {
+					return "The file does not contain any settings of this control panel.";
+				}
+
+				var previousData = getLocalStorage();
+				try {
+					localStorage.clear();
+					keys.forEach(function(key) {
+						localStorage.setItem(key, String(o[key]));
+					});
+				} catch (e) {
+					//e.g. the backup is larger than the storage quota: put the previous data back
+					localStorage.clear();
+					var previous = JSON.parse(previousData);
+					for (var key in previous) {
+						localStorage.setItem(key, previous[key]);
+					}
+					return "The backup could not be stored (" + e.message + ").";
+				}
+				return null;
+			}
 
 			//Copy all data to clipboard
 			function exportData() {
