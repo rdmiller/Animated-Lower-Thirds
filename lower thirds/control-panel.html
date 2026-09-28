@@ -2255,9 +2255,9 @@
 					this.downTimer = setTimeout(function() {
 						    //Delete
 							document.getElementById(slot_id).classList.add("delete");
-							$('#' + name_id)[0].innerHTML = "";
-							$('#' + info_id)[0].innerHTML = "";
-							$('#' + logo_id)[0].innerHTML = "";
+							$('#' + name_id)[0].textContent = "";
+							$('#' + info_id)[0].textContent = "";
+							$('#' + logo_id)[0].textContent = "";
 							slotDeleted = true;
 					}, 600);
 				}).mouseup(function(e) {
@@ -2270,12 +2270,12 @@
 								const info_to_save = $(info + ":text").val();
 								const logo_to_save = $(logo).attr("src");
 								if (name_to_save && info_to_save){
-									$('#' + name_id)[0].innerHTML = name_to_save;
-									$('#' + info_id)[0].innerHTML = info_to_save;
+									$('#' + name_id)[0].textContent = name_to_save;
+									$('#' + info_id)[0].textContent = info_to_save;
 									if (is_default_logo){
-										$('#' + logo_id)[0].innerHTML = "default";
+										$('#' + logo_id)[0].textContent = "default";
 									} else {
-										$('#' + logo_id)[0].innerHTML = logo_to_save;
+										$('#' + logo_id)[0].textContent = logo_to_save;
 									}
 								}
 							} else {
@@ -2965,7 +2965,11 @@
 							}
 						} else {
 							if (isStored) {
-								$(this).prepend('<span class="tooltiptext">' + name_to_tooltip + '<br>' + info_to_tooltip + '<hr><p>Click and hold to delete.</p></span>');
+								// Slot text is user content: add it as text, never as HTML
+								const tooltip = $('<span class="tooltiptext"><br><hr><p>Click and hold to delete.</p></span>');
+								tooltip.prepend(document.createTextNode(name_to_tooltip));
+								tooltip.children('br').after(document.createTextNode(info_to_tooltip));
+								$(this).prepend(tooltip);
 							}
 						}
 
