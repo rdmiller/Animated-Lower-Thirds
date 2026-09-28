@@ -9,7 +9,6 @@
 		<title>Lower Thirds Control Panel</title>
 		<link rel="stylesheet" href="../common/css/style-control_panel.css">
 		<link rel="stylesheet" href="../common/css/cp-icons.css">
-		<script src="../common/js/jquery.js"></script>
 		<script src="../common/js/jscolor.js"></script>
 		<script src="../common/js/hotkeys.js"></script>
 	</head>
@@ -449,6 +448,32 @@
 		<script>
 			/**
 			 *
+			 * DOM HELPERS
+			 *
+			 */
+			const byId = (id) => document.getElementById(id);
+			const all = (selector, root = document) => Array.from(root.querySelectorAll(selector));
+			//First child element matching a selector
+			const child = (element, selector) => Array.from(element.children).find((c) => c.matches(selector));
+			//Run the change handlers of an element, as when the user changes it
+			const fireChange = (element) => element.dispatchEvent(new Event("change", {bubbles: true}));
+			//Value of an attribute, or undefined if the element doesn't have it
+			const getAttr = (element, name) => element.hasAttribute(name) ? element.getAttribute(name) : undefined;
+			//Set an attribute; null removes it and undefined leaves it unchanged
+			function setAttr(element, name, value) {
+				if (value === null) {
+					element.removeAttribute(name);
+				} else if (value !== undefined) {
+					element.setAttribute(name, value);
+				}
+			}
+			//Whether an element has a class. Unlike classList.contains, it is false (not an error) for "" or names with spaces.
+			const hasClass = (element, name) => (" " + (element.getAttribute("class") || "").split(/[\x20\t\r\n\f]+/).join(" ") + " ").includes(" " + name + " ");
+			//Whether an element has no child nodes, not even text
+			const isEmpty = (element) => element.childNodes.length == 0;
+
+			/**
+			 *
 			 * DEFAULT VALUES
 			 *
 			 */
@@ -488,38 +513,38 @@
 			const default_info_color = '#8A8A8A';
 
 			function loadDefaultValues() {
-				$("[id^=alt-][id$=-style]").val(default_style);
-				$("[id^=alt-][id$=-size]").val(default_size);
-				$("[id^=alt-][id$=-margin-h]").val(default_margin_h);
-				$("[id^=alt-][id$=-margin-v]").val(default_margin_v);
+				all("[id^=alt-][id$=-style]").forEach((el) => el.value = default_style);
+				all("[id^=alt-][id$=-size]").forEach((el) => el.value = default_size);
+				all("[id^=alt-][id$=-margin-h]").forEach((el) => el.value = default_margin_h);
+				all("[id^=alt-][id$=-margin-v]").forEach((el) => el.value = default_margin_v);
 
-				$("[id^=alt-][id$=-inverse-ratio]").val(default_inverse_ratio);
-				$("[id^=alt-][id$=-line-spacing]").val(default_line_spacing);
+				all("[id^=alt-][id$=-inverse-ratio]").forEach((el) => el.value = default_inverse_ratio);
+				all("[id^=alt-][id$=-line-spacing]").forEach((el) => el.value = default_line_spacing);
 
-				$("[id^=alt-][id$=-logo]").prop('checked', default_logo);
-				$("[id^=alt-][id$=-logo-size]").val(default_logo_size);
-				$("[id^=alt-][id$=-shadow]").prop('checked', default_shadow);
-				$("[id^=alt-][id$=-shadow-amount]").val(default_shadow_amount);
-				$("[id^=alt-][id$=-background]").val('checked', default_background);
-				$("[id^=alt-][id$=-style-color-1]").val(default_style_color_1);
-				$("[id^=alt-][id$=-style-color-2]").val(default_style_color_2);
+				all("[id^=alt-][id$=-logo]").forEach((el) => el.checked = default_logo);
+				all("[id^=alt-][id$=-logo-size]").forEach((el) => el.value = default_logo_size);
+				all("[id^=alt-][id$=-shadow]").forEach((el) => el.checked = default_shadow);
+				all("[id^=alt-][id$=-shadow-amount]").forEach((el) => el.value = default_shadow_amount);
+				all("[id^=alt-][id$=-background]").forEach((el) => el.value = 'checked');
+				all("[id^=alt-][id$=-style-color-1]").forEach((el) => el.value = default_style_color_1);
+				all("[id^=alt-][id$=-style-color-2]").forEach((el) => el.value = default_style_color_2);
 
-				$("[id^=alt-][id$=-corners]").val(default_corners);
-				$("[id^=alt-][id$=-border-thickness]").prop('checked', default_border_thickness);
-				$("[id^=alt-][id$=-border-thickness-amount]").val(default_border_thickness_amount);
-				$("[id^=alt-][id$=-border-color]").prop('checked', default_border_color);
-				$("[id^=alt-][id$=-style-color-3]").val(default_style_color_3);
-				$("[id^=alt-][id$=-style-color-4]").val(default_style_color_4);
+				all("[id^=alt-][id$=-corners]").forEach((el) => el.value = default_corners);
+				all("[id^=alt-][id$=-border-thickness]").forEach((el) => el.checked = default_border_thickness);
+				all("[id^=alt-][id$=-border-thickness-amount]").forEach((el) => el.value = default_border_thickness_amount);
+				all("[id^=alt-][id$=-border-color]").forEach((el) => el.checked = default_border_color);
+				all("[id^=alt-][id$=-style-color-3]").forEach((el) => el.value = default_style_color_3);
+				all("[id^=alt-][id$=-style-color-4]").forEach((el) => el.value = default_style_color_4);
 
-				$("[id^=alt-][id$=-name-transform]").prop('checked', default_name_transform);
-				$("[id^=alt-][id$=-name-weight]").prop('checked', default_name_weight);
-				$("[id^=alt-][id$=-name-style]").prop('checked', default_name_style);
-				$("[id^=alt-][id$=-name-color]").val(default_name_color);
+				all("[id^=alt-][id$=-name-transform]").forEach((el) => el.checked = default_name_transform);
+				all("[id^=alt-][id$=-name-weight]").forEach((el) => el.checked = default_name_weight);
+				all("[id^=alt-][id$=-name-style]").forEach((el) => el.checked = default_name_style);
+				all("[id^=alt-][id$=-name-color]").forEach((el) => el.value = default_name_color);
 
-				$("[id^=alt-][id$=-info-transform]").prop('checked', default_info_transform);
-				$("[id^=alt-][id$=-info-weight]").prop('checked', default_info_weight);
-				$("[id^=alt-][id$=-info-style]").prop('checked', default_info_style);
-				$("[id^=alt-][id$=-info-color]").val(default_info_color);
+				all("[id^=alt-][id$=-info-transform]").forEach((el) => el.checked = default_info_transform);
+				all("[id^=alt-][id$=-info-weight]").forEach((el) => el.checked = default_info_weight);
+				all("[id^=alt-][id$=-info-style]").forEach((el) => el.checked = default_info_style);
+				all("[id^=alt-][id$=-info-color]").forEach((el) => el.value = default_info_color);
 			}
 
 
@@ -631,7 +656,7 @@
 
 			function updateMoreMaxHeight() {
 				const element = document.getElementsByClassName("more")[0];
-				if ($('#more-settings').css('max-height') != "0px") {
+				if (getComputedStyle(byId('more-settings')).maxHeight != "0px") {
 					var hideMore = element.nextElementSibling;
 					hideMore.style.maxHeight = hideMore.scrollHeight + "px";
 
@@ -646,10 +671,15 @@
 
 			//Load the theme style
 			var theme = localStorage.getItem('theme') ? localStorage.getItem('theme') : 'dark';
-			$('head').append('<link rel="stylesheet" href="../common/css/themes/' + theme + '/theme.css"/>');
+			(function () {
+				const link = document.createElement('link');
+				link.rel = "stylesheet";
+				link.href = "../common/css/themes/" + theme + "/theme.css";
+				document.head.appendChild(link);
+			})();
 
 			function changeTheme(newTheme) {
-				$('link[href="../common/css/themes/' + theme + '/theme.css"]').remove();
+				all('link[href="../common/css/themes/' + theme + '/theme.css"]').forEach((link) => link.remove());
 				var head= document.getElementsByTagName('head')[0];
 				var link= document.createElement('link');
 				link.rel= "stylesheet";
@@ -661,14 +691,14 @@
 			//Theme options to settings
 			var themes = ['acri', 'dark', 'rachni'];
 
-			$.each(themes, function(i) {
-				var $selected = '';
-
-				if(themes[i] == theme) {
-					$selected = 'selected';
+			themes.forEach(function(theme_name) {
+				const option = document.createElement("option");
+				option.setAttribute("name", theme_name);
+				option.textContent = theme_name;
+				if(theme_name == theme) {
+					option.setAttribute("selected", "");
 				}
-
-				$('#alt-main-config-content #theme').append('<option name="' + themes[i] + '"' + $selected + '>' + themes[i] + '</option>');
+				all('#alt-main-config-content #theme').forEach((select) => select.appendChild(option.cloneNode(true)));
 			});
 
 			//////////////////
@@ -685,44 +715,55 @@
 				customFonts = Number(localStorage.getItem("customFonts"));
 			}
 	
+			//Item of the custom font list, showing a font's name and url
+			function customFontItem(number, name, url) {
+				const li = document.createElement("li");
+				li.innerHTML = '<div class="font-name-added slot-storable"></div><div class="font-url-added slot-storable"></div><div class="delete-font"><div class="icon icon-trash"></div></div>';
+				li.children[0].id = 'font-name-added-' + number;
+				li.children[0].textContent = name;
+				li.children[1].id = 'font-url-added-' + number;
+				li.children[1].textContent = url;
+				return li;
+			}
+
 			for (var i = 0; i < customFonts; i++) {
 				font_number = i + 1;
-				$('#custom-font-list ul').append('<li><div class="font-name-added slot-storable" id="font-name-added-' + font_number + '"></div><div class="font-url-added slot-storable" id="font-url-added-' + font_number + '"></div><div class="delete-font"><div class="icon icon-trash"></div></div></li>');
+				all('#custom-font-list ul').forEach((ul) => ul.appendChild(customFontItem(font_number, "", "")));
 			}
 
 			//On load
 			function updateCustomFontList() {			
 					//Update the fontlist array (name and urls)
-					$('#custom-font-list ul li').each(function(){
-						var font_name_to_add = $(this).children('.font-name-added').text();
-						var font_url_to_add = $(this).children('.font-url-added').text();
+					all('#custom-font-list ul li').forEach(function(li){
+						var font_name_to_add = child(li, '.font-name-added').textContent;
+						var font_url_to_add = child(li, '.font-url-added').textContent;
 						fontlist_names.push(font_name_to_add);
 						fontlist_urls.push(font_url_to_add);
 					});				
 
 					//Refresh the font list
-					$.each(fontlist_names, function(i) {
+					fontlist_names.forEach(function(font_name) {
 
-						var fontlist_shortname = fontlist_names[i].substring(
-							fontlist_names[i].lastIndexOf("*'") + 2, 
-							fontlist_names[i].lastIndexOf("',")
+						var fontlist_shortname = font_name.substring(
+							font_name.lastIndexOf("*'") + 2, 
+							font_name.lastIndexOf("',")
 						);
 
-						$('.font-storable').each(function(){
-							$(this).append('<option value="' + fontlist_names[i] + '">' + fontlist_shortname + '</option>');
+						all('.font-storable').forEach(function(select){
+							select.appendChild(new Option(fontlist_shortname, font_name));
 						});
 
 					});
 
 					//Load the font stored in the localstorage
-					$('.font-storable').each(function(){
-						var id = $(this).attr('id');
+					all('.font-storable').forEach(function(select){
+						var id = select.id;
 						if(localStorage.getItem(id)){
-							$("#" + id).val(localStorage.getItem(id));
+							byId(id).value = localStorage.getItem(id);
 						}
 						//If option doesn't exist check the first
 						if(fontlist_names.includes(localStorage.getItem(id)) == false){
-							$("#" + id).val("'Open Sans', sans-serif");
+							byId(id).value = "'Open Sans', sans-serif";
 						}
     				});
 
@@ -742,8 +783,8 @@
 					font_name.lastIndexOf("',")
 				);
 
-				$('.font-storable').each(function(){
-					$(this).append('<option value="' + font_name + '">' + font_name_shortname + '</option>');
+				all('.font-storable').forEach(function(select){
+					select.appendChild(new Option(font_name_shortname, font_name));
 				});
 
 				function_send_font();
@@ -753,33 +794,29 @@
 			//Remove Custom Fonts to the panel Selectors
 			function removeFont(font_name, font_url) {
 				//Remove from the array
-				fontlist_names = jQuery.grep(fontlist_names, function(value) {
-				return value != font_name;
-				});
-				fontlist_urls = jQuery.grep(fontlist_urls, function(value) {
-				return value != font_url;
-				});
+				fontlist_names = fontlist_names.filter((value) => value != font_name);
+				fontlist_urls = fontlist_urls.filter((value) => value != font_url);
 
 				var font_name_shortname = font_name.substring(
 					font_name.lastIndexOf("*'") + 2, 
 					font_name.lastIndexOf("',")
 				);
 				
-				$('.font-storable').each(function(){
-					$(this).children('option[value="' + font_name + '"]').remove();
+				all('.font-storable').forEach(function(select){
+					Array.from(select.children).filter((option) => option.matches('option') && option.value == font_name).forEach((option) => option.remove());
 				});
 			}			
 
 
 			//Add new Font
-			$('#add-new-font').click(function() {
-				var howMany = $('#custom-font-list ul li').length;
+			byId('add-new-font').addEventListener('click', function() {
+				var howMany = all('#custom-font-list ul li').length;
 				howMany += 1;
-				var font_name_to_add = $('#new-font-name').val();
-				var font_url_to_add = $('#new-font-url').val();
+				var font_name_to_add = byId('new-font-name').value;
+				var font_url_to_add = byId('new-font-url').value;
 				if (font_name_to_add && font_url_to_add){
-					$("#new-font-name").val("");
-					$("#new-font-url").val("");
+					byId("new-font-name").value = "";
+					byId("new-font-url").value = "";
 
 					//Clean font name to add whit no "font-family" or ";"
 					var font_name_to_add_clean = font_name_to_add.replace("font-family: ", "");
@@ -790,7 +827,7 @@
 					var font_url_to_add_clean = font_url_to_add_clean.replace(" </style>", "");
 
 
-					$('#custom-font-list ul').append('<li><div class="font-name-added slot-storable" id="font-name-added-' + howMany + '">' + font_name_to_add_clean + '</div><div class="font-url-added slot-storable" id="font-url-added-' + howMany + '">' + font_url_to_add_clean + '</div><div class="delete-font"><div class="icon icon-trash"></div></div></li>');
+					all('#custom-font-list ul').forEach((ul) => ul.appendChild(customFontItem(howMany, font_name_to_add_clean, font_url_to_add_clean)));
 					AddNewFont(font_name_to_add_clean, font_url_to_add_clean);
 
 					//Increase the heigh of the main settings panel
@@ -810,14 +847,18 @@
 			});
 
 			//Remove Font
-			$('#custom-font-list ul').on('click', 'li > .delete-font', function(e) {
-				var howMany = $('#custom-font-list ul li').length;
+			all('#custom-font-list ul').forEach((ul) => ul.addEventListener('click', function(e) {
+				const delete_font = e.target.closest('li > .delete-font');
+				if (!delete_font || !ul.contains(delete_font)) {
+					return;
+				}
+				var howMany = all('#custom-font-list ul li').length;
 				howMany -= 1;
 
-				var font_name_to_remove = $(this).closest('li').children('.font-name-added').text();
-				var font_url_to_remove = $(this).closest('li').children('.font-url-added').text();
+				var font_name_to_remove = child(delete_font.closest('li'), '.font-name-added').textContent;
+				var font_url_to_remove = child(delete_font.closest('li'), '.font-url-added').textContent;
 
-				$(this).closest('li').remove();
+				delete_font.closest('li').remove();
 				
 				removeFont(font_name_to_remove, font_url_to_remove);
 
@@ -830,22 +871,26 @@
 					localStorage.removeItem('font-name-added-' + i);
 					localStorage.removeItem('font-url-added-' + i);
 				}
-			});
+			}));
 
 			//<Rename> de IDs of Font to correct store
-			$('#custom-font-list ul').on('click', 'li', function(e) {
-				$('#custom-font-list ul li').each(function(i) {
+			//(Also after a font was deleted by the handler above: its item is no longer in the list, but was clicked.)
+			all('#custom-font-list ul').forEach((ul) => ul.addEventListener('click', function(e) {
+				if (!e.target.closest('li')) {
+					return;
+				}
+				all('#custom-font-list ul li').forEach(function(li, i) {
 					i++;
 					var font_name_added = 'font-name-added-' + i;
 					var font_url_added = 'font-url-added-' + i;
 
-					$(this).children('.font-name-added').attr('id', font_name_added);
-					$(this).children('.font-url-added').attr('id', font_url_added);
+					child(li, '.font-name-added').id = font_name_added;
+					child(li, '.font-url-added').id = font_url_added;
 
-					localStorage.setItem(font_name_added, $('#' + font_name_added).text());
-					localStorage.setItem(font_url_added, $('#' + font_url_added).text());
+					localStorage.setItem(font_name_added, byId(font_name_added).textContent);
+					localStorage.setItem(font_url_added, byId(font_url_added).textContent);
 				});
-			});
+			}));
 
 
 			//////////////////
@@ -935,20 +980,23 @@
 
 			if(localStorage.getItem("sorted") !== null){
 			  var arrValuesForOrder = localStorage.getItem('sorted').substring(6).split("&alt[]=");
-			  var $ul = $("#sortable");
-			  $items = $("#sortable").children();
+			  var sortable = byId("sortable");
+			  var panels = Array.from(sortable.children);
 
 			  // loop backwards so you can just prepend elements in the list
 			  // instead of trying to place them at a specific position
 			  for (var i = arrValuesForOrder.length - 1; i >= 0; i--) {
 			    // index is zero-based to you have to remove one from the values in your array
-			    $ul.prepend( $items.get((arrValuesForOrder[i] - 1)));
+			    var panel = panels[arrValuesForOrder[i] - 1];
+			    if (panel) {
+			      sortable.prepend(panel);
+			    }
 			  }
 			}
 
 		    /*
 		    //Reset order button
-		    $("#clear").click(function(){
+		    byId("clear").addEventListener("click", function(){
 		      window.localStorage.removeItem("sorted");
 		    });
 			*/			
@@ -956,23 +1004,29 @@
 		    ////////////////////
 
 			var oriVal;
-			$(".renameable").on('dblclick', function () {
-				var titleDiv = $(this);
-				if (titleDiv.text()){
-					oriVal = titleDiv.text();
+			all(".renameable").forEach((titleDiv) => titleDiv.addEventListener('dblclick', function () {
+				if (titleDiv.textContent){
+					oriVal = titleDiv.textContent;
 				}
-				titleDiv.text("");
-				$("<input type='text' value='"+ oriVal + "' maxlength='40'>").appendTo(this).focus().change(function() {
-					titleDiv.text($(this).val());
+				titleDiv.textContent = "";
+				const input = document.createElement("input");
+				input.type = "text";
+				input.setAttribute("value", oriVal);
+				input.maxLength = 40;
+				titleDiv.appendChild(input);
+				input.focus();
+				input.addEventListener("change", function() {
+					titleDiv.textContent = input.value;
 				});
 
-			});
+			}));
 
-			$(".renameable").on('focusout', '> input', function () {
-				var newAltTitle = $(this);
-				// newAltTitle.parent().text(newAltTitle.val() || oriVal);
-				newAltTitle.remove();
-			});
+			all(".renameable").forEach((titleDiv) => titleDiv.addEventListener('focusout', function (e) {
+				if (e.target.matches('input') && e.target.parentElement === titleDiv) {
+					// titleDiv.textContent = e.target.value || oriVal;
+					e.target.remove();
+				}
+			}));
 
 			////////////////////
 
@@ -1025,7 +1079,7 @@
 			//Reload the hotjeys.js file updated by the LUA script
 			function updateHotkeys() {
 			    src = '../common/js/hotkeys.js';
-			    $('script[src="' + src + '"]').remove();
+			    all('script[src="' + src + '"]').forEach((script) => script.remove());
 			    var head= document.getElementsByTagName('head')[0];
 		    	var script= document.createElement('script');
 		    	script.src= src;
@@ -1035,20 +1089,18 @@
 			//Toggle the switches if a hotkey is pressed
 			function checkHotkeys (){
 				if (hotkeyMasterSwitch != hotkeyMasterSwitchOld){
-					if (document.getElementById("lower-thirds-masterswitch").checked) {
-						$('#lower-thirds-masterswitch').prop('checked', false).change();
-		            }
-		            else {
-						$('#lower-thirds-masterswitch').prop('checked', true).change();
-		            }
+					const master_switch = byId("lower-thirds-masterswitch");
+					master_switch.checked = !master_switch.checked;
+					fireChange(master_switch);
 					hotkeyMasterSwitchOld = hotkeyMasterSwitch;
 				}
 
 				for (let n = 1; n <= LOWER_THIRDS_COUNT; n++) {
 					const switch_hotkey = "hotkeySwitch" + n;
 					if (window[switch_hotkey] != hotkeysOld[switch_hotkey]){
-						const lt_switch = $("#lower-thirds-switch" + n);
-						lt_switch.prop('checked', !lt_switch.prop('checked')).change();
+						const lt_switch = byId("lower-thirds-switch" + n);
+						lt_switch.checked = !lt_switch.checked;
+						fireChange(lt_switch);
 						hotkeysOld[switch_hotkey] = window[switch_hotkey];
 					}
 				}
@@ -1059,11 +1111,11 @@
 					for (let slot = 1; slot <= MEMORY_SLOTS_COUNT; slot++) {
 						const slot_hotkey = "hotkeyAlt" + n + "Slot" + slot;
 						if (window[slot_hotkey] != hotkeysOld[slot_hotkey]) {
-							const name_to_load = $("#alt-" + n + "-name-" + slot).text();
-							const info_to_load = $("#alt-" + n + "-info-" + slot).text();
+							const name_to_load = byId("alt-" + n + "-name-" + slot).textContent;
+							const info_to_load = byId("alt-" + n + "-info-" + slot).textContent;
 							//Empty slots are not loaded
 							if (name_to_load && info_to_load){
-								loadSlot(slots.name, slots.info, slots.logo, name_to_load, info_to_load, $("#alt-" + n + "-logo-" + slot).text(), 0);
+								loadSlot(slots.name, slots.info, slots.logo, name_to_load, info_to_load, byId("alt-" + n + "-logo-" + slot).textContent, 0);
 							}
 							hotkeysOld[slot_hotkey] = window[slot_hotkey];
 						}
@@ -1078,8 +1130,8 @@
 				localStorage.clear(); //To clear data fields
 
 				//Restore logo default (fix missing logos in the reload)
-				$('.logo-storable').each(function(){
-					var id = $(this).attr('id');
+				all('.logo-storable').forEach(function(logo){
+					var id = getAttr(logo, 'id');
 					var value;
 					//alt-N-logo-preview and alt-N-logo-default start with the default logo of lower third N
 					var logo_of = id.match(/^alt-(\d+)-logo-(preview|default)$/);
@@ -1127,42 +1179,43 @@
 			function openLogoPopup(logo, logo_default) {
 				document.getElementById("select-image").classList.remove("hide");
 				document.getElementById("file-preview").classList.remove("no-image");
-				var preview_to_change = $("#" + logo).attr("src");
+				var preview_to_change = getAttr(byId(logo), "src");
 				var preview = document.getElementById("logo-file-preview");
 				preview.src = preview_to_change;
 				preview.style.display = "block";
-				$("#logo-file").val("");
+				byId("logo-file").value = "";
 				
 				//Config ok button
-				$(".btn-ok").attr("onclick", "okLogoPopup('" + logo + "', '" + logo_default + "')");
+				all(".btn-ok").forEach((button) => button.setAttribute("onclick", "okLogoPopup('" + logo + "', '" + logo_default + "')"));
 				
 				//Hide remove button if it's a default logo
 				if (logo == logo_default){
-					$(".btn-remove").attr('style','display: none');
+					all(".btn-remove").forEach((button) => button.setAttribute('style','display: none'));
 				} else {
-					$(".btn-remove").attr('style','display: block');
+					all(".btn-remove").forEach((button) => button.setAttribute('style','display: block'));
 				}
 			}
 
 			//OK button
 			function okLogoPopup(logo, logo_default) {
 				var src = document.getElementById("logo-file").files[0];
-				var popup_preview = $("#logo-file-preview").attr("src");
+				var popup_preview = getAttr(byId("logo-file-preview"), "src");
 				var preview = document.getElementById(logo);
 				var alt_logo_preview = logo_default.replace("-default", "-preview");
 
 				if(src){
 					preview.src = "../logos/" + src.name;
-					$(preview).change();
+					fireChange(preview);
 					//Change the lt logo if it use default
-					if (logo == logo_default && $("#" + alt_logo_preview).hasClass('default')){
-						$("#" + alt_logo_preview).attr("src", "../logos/" + src.name).change();
+					if (logo == logo_default && hasClass(byId(alt_logo_preview), 'default')){
+						setAttr(byId(alt_logo_preview), "src", "../logos/" + src.name);
+						fireChange(byId(alt_logo_preview));
 					}
 				} else {
 					if (!popup_preview) {
-						var alt_logo_default = $("#" + logo_default).attr("src");
+						var alt_logo_default = getAttr(byId(logo_default), "src");
 						preview.src = alt_logo_default;
-						$(preview).change();
+						fireChange(preview);
 					}
 				}
 				
@@ -1177,50 +1230,50 @@
 			function removeLogoPopup() {
 				var preview = document.getElementById("logo-file-preview");
 				document.getElementById("file-preview").classList.add("no-image");
-				$("#logo-file").val("");
+				byId("logo-file").value = "";
 				preview.src = "";
 				preview.style.display = "none";
 			}
 
 			function checkLogos() {
-				$(".alt-logo-preview").each(function(){
-					check_logo_id = $(this).attr('id');
+				all(".alt-logo-preview").forEach(function(logo_preview){
+					check_logo_id = getAttr(logo_preview, 'id');
 					check_default_logo_id = check_logo_id.replace("-preview", "-default");
-					check_is_default_logo = ($("#" + check_logo_id).attr("src") == $("#" + check_default_logo_id).attr("src"))? true : false;
+					check_is_default_logo = (getAttr(byId(check_logo_id), "src") == getAttr(byId(check_default_logo_id), "src"))? true : false;
 					
 					if (check_is_default_logo) {
-						$("#" + check_logo_id).addClass('default');
+						byId(check_logo_id).classList.add('default');
 					} else {
-						$("#" + check_logo_id).removeClass('default');
+						byId(check_logo_id).classList.remove('default');
 					}
 				});
 			}
 
 			//Memory Slots System
 			function checkSlots (memory_slot, name, info, logo) {
-				$("ul" + memory_slot + " li").each(function(){
-					const check_slot_id = $(this).attr('id');
-					const check_name_id = $(this).children('.stored-name').attr('id');
-					const check_info_id = $(this).children('.stored-info').attr('id');
-					const check_logo_id = $(this).children('.stored-logo').attr('id');
-					const check_is_default_logo = $(logo).hasClass('default');
-					const name_value = $(this).children('.stored-name').text();
-					const info_value = $(this).children('.stored-info').text();
-					const logo_value = $(this).children('.stored-logo').text();
+				all("ul" + memory_slot + " li").forEach(function(li){
+					const check_slot_id = getAttr(li, 'id');
+					const check_name_id = child(li, '.stored-name').id;
+					const check_info_id = child(li, '.stored-info').id;
+					const check_logo_id = child(li, '.stored-logo').id;
+					const check_is_default_logo = hasClass(document.querySelector(logo), 'default');
+					const name_value = child(li, '.stored-name').textContent;
+					const info_value = child(li, '.stored-info').textContent;
+					const logo_value = child(li, '.stored-logo').textContent;
 
 					let check_slot_id_element = document.getElementById(check_slot_id);
 
 					//If stored data has no logo, set to default
 					if (name_value && info_value && !logo_value) {
-						$(this).children('.stored-logo').text("default");
+						child(li, '.stored-logo').textContent = "default";
 					}
-					if ($('#' + check_name_id).is(':empty') && $('#' + check_info_id).is(':empty') && $('#' + check_logo_id).is(':empty')){
+					if (isEmpty(byId(check_name_id)) && isEmpty(byId(check_info_id)) && isEmpty(byId(check_logo_id))){
 						check_slot_id_element.classList.remove("stored");
 					} else {
 						check_slot_id_element.classList.add("stored");
 					}
 					//Check active slots
-					if ($(name).val() == name_value && $(info).val() == info_value && ($(logo).attr("src") == logo_value || (check_is_default_logo && logo_value == "default"))){
+					if (document.querySelector(name).value == name_value && document.querySelector(info).value == info_value && (getAttr(document.querySelector(logo), "src") == logo_value || (check_is_default_logo && logo_value == "default"))){
 						if(name_value && info_value && logo_value){
 							check_slot_id_element.classList.add("active-slot");
 							check_slot_id_element.classList.remove("next-to-load");
@@ -1241,68 +1294,77 @@
 
 			function memorySlotsSystem (memory_slot, name, info, logo) {
 				let slot_id, name_id, info_id, logo_id, default_logo, is_default_logo;
-				$("ul" + memory_slot + " li").mousedown(function(e){
-					slot_id = $(this).attr('id');
-					name_id = $(this).children('.stored-name').attr('id');
-					info_id = $(this).children('.stored-info').attr('id');
-					logo_id = $(this).children('.stored-logo').attr('id');
-					// name_value = $(this).children('.stored-name').text();
-					// info_value = $(this).children('.stored-info').text();
+				all("ul" + memory_slot + " li").forEach((li) => {
+				li.addEventListener("mousedown", function(e){
+					slot_id = getAttr(li, 'id');
+					name_id = child(li, '.stored-name').id;
+					info_id = child(li, '.stored-info').id;
+					logo_id = child(li, '.stored-logo').id;
+					// name_value = child(li, '.stored-name').textContent;
+					// info_value = child(li, '.stored-info').textContent;
 					default_logo = logo.replace("-preview", "-default");
-					is_default_logo = ($(logo).attr("src") == $(default_logo).attr("src")) ? true : false;
+					is_default_logo = (getAttr(document.querySelector(logo), "src") == getAttr(document.querySelector(default_logo), "src")) ? true : false;
 					clearTimeout(this.downTimer);
 					this.downTimer = setTimeout(function() {
 						    //Delete
 							document.getElementById(slot_id).classList.add("delete");
-							$('#' + name_id)[0].textContent = "";
-							$('#' + info_id)[0].textContent = "";
-							$('#' + logo_id)[0].textContent = "";
+							byId(name_id).textContent = "";
+							byId(info_id).textContent = "";
+							byId(logo_id).textContent = "";
 							slotDeleted = true;
 					}, 600);
-				}).mouseup(function(e) {
+				});
+				li.addEventListener("mouseup", function(e) {
 					clearTimeout(this.downTimer);
 				    document.getElementById(slot_id).classList.remove("delete");
 				    	if (!slotDeleted){
-				    		if ($('#' + name_id).is(':empty') && $('#' + info_id).is(':empty') && $('#' + logo_id).is(':empty')){
+				    		if (isEmpty(byId(name_id)) && isEmpty(byId(info_id)) && isEmpty(byId(logo_id))){
 								//Save
-								const name_to_save = $(name + ":text").val();
-								const info_to_save = $(info + ":text").val();
-								const logo_to_save = $(logo).attr("src");
+								const name_to_save = document.querySelector(name).value;
+								const info_to_save = document.querySelector(info).value;
+								const logo_to_save = getAttr(document.querySelector(logo), "src");
 								if (name_to_save && info_to_save){
-									$('#' + name_id)[0].textContent = name_to_save;
-									$('#' + info_id)[0].textContent = info_to_save;
+									byId(name_id).textContent = name_to_save;
+									byId(info_id).textContent = info_to_save;
 									if (is_default_logo){
-										$('#' + logo_id)[0].textContent = "default";
+										byId(logo_id).textContent = "default";
 									} else {
-										$('#' + logo_id)[0].textContent = logo_to_save;
+										byId(logo_id).textContent = logo_to_save;
 									}
 								}
 							} else {
-								//Load
-								const name_to_load = $(this).children('#' + name_id).text();
-								const info_to_load = $(this).children('#' + info_id).text();
-								const logo_to_load = $(this).children('#' + logo_id).text();
-								const defaul_logo_to_load = $(default_logo).attr("src");
-								$(name + ":text").val(name_to_load).change();
-								$(info + ":text").val(info_to_load).change();
+								//Load (the stored texts are read from the slot where the button was released)
+								const released_text = (id) => { const stored = child(li, "#" + CSS.escape(id)); return stored ? stored.textContent : ""; };
+								const name_to_load = released_text(name_id);
+								const info_to_load = released_text(info_id);
+								const logo_to_load = released_text(logo_id);
+								const defaul_logo_to_load = getAttr(document.querySelector(default_logo), "src");
+								document.querySelector(name).value = name_to_load;
+								fireChange(document.querySelector(name));
+								document.querySelector(info).value = info_to_load;
+								fireChange(document.querySelector(info));
 								if (logo_to_load == "default"){
-									$(logo).attr("src", defaul_logo_to_load).change();
+									setAttr(document.querySelector(logo), "src", defaul_logo_to_load);
+									fireChange(document.querySelector(logo));
 								} else {
-									$(logo).attr("src", logo_to_load).change();
+									setAttr(document.querySelector(logo), "src", logo_to_load);
+									fireChange(document.querySelector(logo));
 								}
 
 								//Switch ON the panel if the autotrigger is ON
-								const slot_number_called = $(this).children('.slot-number').text();
+								const slot_number_called = child(li, '.slot-number').textContent;
 								const auto_trigger = slot_id.replace("-slot-" + slot_number_called, "-autotrigger");
 								let alt_switch = slot_id.replace("alt-", "");
 								alt_switch = alt_switch.replace("-slot-" + slot_number_called, "");
-								if (document.getElementById(auto_trigger).checked  && $("#lower-thirds-switch" + alt_switch).is(':not(:checked)')) {
-									$("#lower-thirds-switch" + alt_switch).prop('checked', true).change();
+								if (document.getElementById(auto_trigger).checked  && !byId("lower-thirds-switch" + alt_switch).checked) {
+									byId("lower-thirds-switch" + alt_switch).checked = true;
+									fireChange(byId("lower-thirds-switch" + alt_switch));
 								}
 							}
 				    	} else {
 							slotDeleted = false;
 				    	}
+				});
 				});
 			}
 			for (let n = 1; n <= LOWER_THIRDS_COUNT; n++) {
@@ -1319,22 +1381,22 @@
 				let next_slot_num;
 				let to_load = 0;
 
-				const name_loaded = $(name + ":text").val();
-				const info_loaded = $(info + ":text").val();
-				const logo_loaded = $(logo).attr("src");
+				const name_loaded = document.querySelector(name).value;
+				const info_loaded = document.querySelector(info).value;
+				const logo_loaded = getAttr(document.querySelector(logo), "src");
 
 				//Find actual and search the next slot to load
-				$("ul" + memory_slot + " li").each(function(){
-					const name_id = $(this).children('.stored-name').attr('id');
-					const info_id = $(this).children('.stored-info').attr('id');
-					const logo_id = $(this).children('.stored-logo').attr('id');
-					const name_value = $(this).children('.stored-name').text();
-					const info_value = $(this).children('.stored-info').text();
-					const logo_value = $(this).children('.stored-logo').text();
-					const slot_number = Number($(this).children('.slot-number').text());
+				all("ul" + memory_slot + " li").forEach(function(li){
+					const name_id = child(li, '.stored-name').id;
+					const info_id = child(li, '.stored-info').id;
+					const logo_id = child(li, '.stored-logo').id;
+					const name_value = child(li, '.stored-name').textContent;
+					const info_value = child(li, '.stored-info').textContent;
+					const logo_value = child(li, '.stored-logo').textContent;
+					const slot_number = Number(child(li, '.slot-number').textContent);
 
-					const loadedSlot = (name_loaded == name_value && info_loaded == info_value && (logo_loaded == logo_value || $(logo).hasClass(logo_value))) ? true : false;
-					const emptySlot = ($('#' + name_id).is(':empty') && $('#' + info_id).is(':empty') && $('#' + logo_id).is(':empty')) ? true : false;
+					const loadedSlot = (name_loaded == name_value && info_loaded == info_value && (logo_loaded == logo_value || hasClass(document.querySelector(logo), logo_value))) ? true : false;
+					const emptySlot = (isEmpty(byId(name_id)) && isEmpty(byId(info_id)) && isEmpty(byId(logo_id))) ? true : false;
 
 					if(!find_first && !emptySlot) {
 						find_first = true;
@@ -1358,18 +1420,18 @@
 
 				// Si hay un slot para cargar
 				if (to_load && to_load > 0) {
-					$("ul" + memory_slot + " li:nth-child("+to_load+")").each(function () {
-						const slot_id = ($(this).attr('id'));
-						const name_id = $(this).children('.stored-name').attr('id');
-						const info_id = $(this).children('.stored-info').attr('id');
-						const logo_id = $(this).children('.stored-logo').attr('id');
+					all("ul" + memory_slot + " li:nth-child("+to_load+")").forEach(function (li) {
+						const slot_id = (getAttr(li, 'id'));
+						const name_id = child(li, '.stored-name').id;
+						const info_id = child(li, '.stored-info').id;
+						const logo_id = child(li, '.stored-logo').id;
 
-						const name_to_load = $(this).children('#' + name_id).text();
-						const info_to_load = $(this).children('#' + info_id).text();
-						const logo_to_load = $(this).children('#' + logo_id).text();
+						const name_to_load = byId(name_id).textContent;
+						const info_to_load = byId(info_id).textContent;
+						const logo_to_load = byId(logo_id).textContent;
 
 						loadSlot(name, info, logo, name_to_load, info_to_load, logo_to_load, alt_waiting_time, false);
-						$('#' + slot_id).addClass('next-to-load');
+						byId(slot_id).classList.add('next-to-load');
 					});
 				}
 			}
@@ -1379,14 +1441,14 @@
 			function loadSlot(name, info, logo, name_to_load, info_to_load, logo_to_load, alt_waiting_time, from_hotkey = true) {
 				setTimeout(function (){
 					const default_logo = logo.replace("-preview", "-default");
-					const default_logo_value = $(default_logo).attr("src");
+					const default_logo_value = getAttr(document.querySelector(default_logo), "src");
 
-					$(name + ":text").val(name_to_load);
-					$(info + ":text").val(info_to_load);
+					document.querySelector(name).value = name_to_load;
+					document.querySelector(info).value = info_to_load;
 					if (logo_to_load == "default") {
 						logo_to_load = default_logo_value;
 					}
-					$(logo).attr("src", logo_to_load);
+					setAttr(document.querySelector(logo), "src", logo_to_load);
 					refreshData();
 				}, alt_waiting_time * 1000);
 
@@ -1396,8 +1458,9 @@
 				let alt_switch = name.replace("#alt-", "");
 				alt_switch = alt_switch.replace("-name", "");
 
-				if (from_hotkey && document.getElementById(auto_trigger).checked && $("#lower-thirds-switch" + alt_switch).is(':not(:checked)')) {
-					$("#lower-thirds-switch" + alt_switch).prop('checked', true).change();
+				if (from_hotkey && document.getElementById(auto_trigger).checked && !byId("lower-thirds-switch" + alt_switch).checked) {
+					byId("lower-thirds-switch" + alt_switch).checked = true;
+									fireChange(byId("lower-thirds-switch" + alt_switch));
 				}
 				//console.log(name + "|" + info + "|" + logo + "|" + name_to_load + "|" + info_to_load + "|" + logo_to_load + "|" + alt_waiting_time);
 			}
@@ -1406,18 +1469,21 @@
 
 			//Button to clear fields
 			for (let n = 1; n <= LOWER_THIRDS_COUNT; n++) {
-				$("#alt-" + n + "-clean-inputs").click(function(){
-					$("#alt-" + n + "-name:text").val("").change();
-					$("#alt-" + n + "-info:text").val("").change();
-					var alt_logo_default = $("#alt-" + n + "-logo-default").attr("src");
-					$("#alt-" + n + "-logo-preview").attr("src", alt_logo_default).change();
+				byId("alt-" + n + "-clean-inputs").addEventListener("click", function(){
+					byId("alt-" + n + "-name").value = "";
+					fireChange(byId("alt-" + n + "-name"));
+					byId("alt-" + n + "-info").value = "";
+					fireChange(byId("alt-" + n + "-info"));
+					var alt_logo_default = getAttr(byId("alt-" + n + "-logo-default"), "src");
+					setAttr(byId("alt-" + n + "-logo-preview"), "src", alt_logo_default);
+					fireChange(byId("alt-" + n + "-logo-preview"));
 				});
 			}
 
 			///////////////////////////////////////
 
 			//Open Preview screen
-			$("#toggle-preview").click(function(){
+			byId("toggle-preview").addEventListener("click", function(){
 				document.getElementById("toggle-preview").classList.toggle("active");
 				document.getElementById("alt-preview").classList.toggle("active");
 				if (document.getElementById("alt-panel").style.marginBottom == "0px") {
@@ -1432,11 +1498,11 @@
 			function getAppearance () {
 				for (let n = 1; n <= LOWER_THIRDS_COUNT; n++) {
 					const lt = lowerThirds[n];
-					const value = (setting) => $("#alt-" + n + "-" + setting).val();
+					const value = (setting) => byId("alt-" + n + "-" + setting).value;
 
 					//Lower Third Style
 					lt.style = value("style") || default_style;
-					$("#alt-" + n + "-style").val(lt.style);
+					byId("alt-" + n + "-style").value = lt.style;
 
 					//Calculate Text Sizes using the inverse ratio
 					lt.inverse_ratio = value("inverse-ratio") || default_inverse_ratio;
@@ -1488,14 +1554,16 @@
 
 					align_center.disabled = !restrictions.align_center;
 					if (!restrictions.align_center && align_center.checked){
-						$("#alt-" + n + "-align-left").prop('checked', true).change();
+						byId("alt-" + n + "-align-left").checked = true;
+						fireChange(byId("alt-" + n + "-align-left"));
 					}
 					logo.disabled = !restrictions.logo;
 					document.getElementById("alt-" + n + "-logo-size").disabled = !restrictions.logo_size;
 					if (!restrictions.logo && logo.checked){
-						$("#alt-" + n + "-logo").prop('checked', false).change();
+						byId("alt-" + n + "-logo").checked = false;
+						fireChange(byId("alt-" + n + "-logo"));
 					}
-					$("#alt-" + n + "-style-border-color-appearance > :nth-child(3)").toggleClass("disabled", !restrictions.border_color_4);
+					all("#alt-" + n + "-style-border-color-appearance > :nth-child(3)").forEach((label) => label.classList.toggle("disabled", !restrictions.border_color_4));
 				}
 			}
 
@@ -1522,8 +1590,9 @@
 					}
 
 					for (let n = 1; n <= LOWER_THIRDS_COUNT; n++) {
-						if (lowerThirds[n].turnoff && $("#lower-thirds-switch" + n).is(':checked')) {
-							$("#lower-thirds-switch" + n).prop('checked', false).change();
+						if (lowerThirds[n].turnoff && byId("lower-thirds-switch" + n).checked) {
+							byId("lower-thirds-switch" + n).checked = false;
+							fireChange(byId("lower-thirds-switch" + n));
 						}
 					}
 
@@ -1533,23 +1602,25 @@
 
 			//////////////////////////////////////
 
+			var twinCheckboxesLinked = false;
+
 			function function_send() {
 				//Switch Lock Active Mode ALT ON/OFF
 				global_lock_active = (document.getElementById("global-lock-active").checked) ? true : false;
 
 				//////////////////////////////
 
-				global_animation_time = $("#global-animation-time").val();
+				global_animation_time = byId("global-animation-time").value;
 				if (global_lock_active){
 					global_active_time = Infinity;
 				} else {
-					global_active_time = $("#global-active-time").val();
+					global_active_time = byId("global-active-time").value;
 				}
-				global_inactive_time = $("#global-inactive-time").val();
+				global_inactive_time = byId("global-inactive-time").value;
 
 				for (let n = 1; n <= LOWER_THIRDS_COUNT; n++) {
 					const lt = lowerThirds[n];
-					const text = (field) => $("#alt-" + n + "-" + field + ":text").val();
+					const text = (field) => byId("alt-" + n + "-" + field).value;
 
 					lt.lock_active = (document.getElementById("alt-" + n + "-lock-active").checked) ? true : false;
 
@@ -1561,14 +1632,14 @@
 					lt.style_color_2 = text("style-color-2");
 					lt.style_color_3 = text("style-color-3");
 					lt.style_color_4 = text("style-color-4");
-					lt.animation_time = $("#alt-" + n + "-animation-time").val();
+					lt.animation_time = byId("alt-" + n + "-animation-time").value;
 					if (lt.lock_active){
 						lt.active_time = Infinity;
 					} else {
-						lt.active_time = $("#alt-" + n + "-active-time").val();
+						lt.active_time = byId("alt-" + n + "-active-time").value;
 					}
-					lt.inactive_time = $("#alt-" + n + "-inactive-time").val();
-					lt.logo_image = $("#alt-" + n + "-logo-preview").attr("src");
+					lt.inactive_time = byId("alt-" + n + "-inactive-time").value;
+					lt.logo_image = getAttr(byId("alt-" + n + "-logo-preview"), "src");
 				}
 
 				//Standard Main settings values
@@ -1611,67 +1682,55 @@
 
 				//Show the slots numbers
 				if (document.getElementById("set-slot-numbers").checked == false) {
-					$('.slot-number').each(function(){
-						$(this).removeClass("hide");
-					});
+					all('.slot-number').forEach((element) => element.classList.remove("hide"));
 				} else {
-					$('.slot-number').each(function(){
-						$(this).addClass("hide");
-					});
+					all('.slot-number').forEach((element) => element.classList.add("hide"));
 				}
 
 				//////////////////////////////
 
 				//Create Tooltips to show the contect of the slots
 				if (document.getElementById("set-tooltips").checked) {
-					$('.panel-bottom > ul > li').each(function(){
-						var name_to_tooltip = $(this).children('.stored-name').text();
-						var info_to_tooltip = $(this).children('.stored-info').text();
+					all('.panel-bottom > ul > li').forEach(function(li){
+						var name_to_tooltip = child(li, '.stored-name').textContent;
+						var info_to_tooltip = child(li, '.stored-info').textContent;
 						var isStored = (name_to_tooltip && info_to_tooltip) ? true : false;
-						var isTooltip = $(this).children(".tooltiptext")[0] ? true : false;
+						var isTooltip = child(li, ".tooltiptext") ? true : false;
 
 						if (isTooltip){
 							if (!isStored) {
-								$(this).children(".tooltiptext").remove();
-								// $(this).prepend('<span class="tooltiptext"><p>Empty. Click to save.</p></span>');
+								Array.from(li.children).filter((c) => c.matches(".tooltiptext")).forEach((c) => c.remove());
+								// li.prepend(<span class="tooltiptext"><p>Empty. Click to save.</p></span>);
 							}
 						} else {
 							if (isStored) {
 								// Slot text is user content: add it as text, never as HTML
-								const tooltip = $('<span class="tooltiptext"><br><hr><p>Click and hold to delete.</p></span>');
+								const tooltip = document.createElement("span");
+								tooltip.className = "tooltiptext";
+								tooltip.innerHTML = '<br><hr><p>Click and hold to delete.</p>';
 								tooltip.prepend(document.createTextNode(name_to_tooltip));
-								tooltip.children('br').after(document.createTextNode(info_to_tooltip));
-								$(this).prepend(tooltip);
+								tooltip.querySelector('br').after(document.createTextNode(info_to_tooltip));
+								li.prepend(tooltip);
 							}
 						}
 
 					});
 				} else {
-					$('.tooltiptext').each(function(){
-						$(this).remove();
-					});
+					all('.tooltiptext').forEach((tooltip) => tooltip.remove());
 				}
 
 
 				//////////////////////////////
 
 				if (document.getElementById("set-switch-position").checked) {
-					$('.switch').each(function(){
-						$(this).addClass("switch-left");
-					});
-					$('.drag-handle').each(function(){
-						$(this).addClass("switch-left");
-					});
-					$('.main-title').addClass("switch-left");
+					all('.switch').forEach((element) => element.classList.add("switch-left"));
+					all('.drag-handle').forEach((element) => element.classList.add("switch-left"));
+					all('.main-title').forEach((title) => title.classList.add("switch-left"));
 
 				} else {
-					$('.switch').each(function(){
-						$(this).removeClass("switch-left");
-					});
-					$('.drag-handle').each(function(){
-						$(this).removeClass("switch-left");
-					});
-					$('.main-title').removeClass("switch-left");
+					all('.switch').forEach((element) => element.classList.remove("switch-left"));
+					all('.drag-handle').forEach((element) => element.classList.remove("switch-left"));
+					all('.main-title').forEach((title) => title.classList.remove("switch-left"));
 				}
 
 
@@ -1679,13 +1738,9 @@
 
 				//Switch Preview ALT ON/OFF
 				if (document.getElementById("set-preview").checked) {
-					$('#alt-preview, .preview-btn').each(function(){
-						$(this).removeClass("hide");
-					});
+					all('#alt-preview, .preview-btn').forEach((element) => element.classList.remove("hide"));
 				} else {
-					$('#alt-preview, .preview-btn').each(function(){
-						$(this).addClass("hide");
-					});
+					all('#alt-preview, .preview-btn').forEach((element) => element.classList.add("hide"));
 				}
 
 				for (let n = 1; n <= LOWER_THIRDS_COUNT; n++) {
@@ -1697,22 +1752,25 @@
 
 					//Switch Logo ON/OFF
 					lt.logo_switch = checked("logo") ? "true" : "false";
-					$("#alt-" + n + "-logo-size").toggleClass("disable", !checked("logo"));
-					$("#alt-" + n + "-config-content > .first-edit-container > .logo-container").toggleClass("hide", !checked("logo"));
+					byId("alt-" + n + "-logo-size").classList.toggle("disable", !checked("logo"));
+					all("#alt-" + n + "-config-content > .first-edit-container > .logo-container").forEach((container) => container.classList.toggle("hide", !checked("logo")));
 
 					//Switch Background color ON/OFF
 					lt.background_switch = checked("background") ? "true" : "false";
-					$("#alt-" + n + "-style-color-appearance").toggleClass("disable", !checked("background"));
+					byId("alt-" + n + "-style-color-appearance").classList.toggle("disable", !checked("background"));
 				}
 
-				//Multiple/Twins checkbox
-				$('.twin-checkbox').each(function(){
-					twin_name = $(this).attr('name');
-					var twin_checkboxes = $("input[type=checkbox][name="+ twin_name +"]");
-					twin_checkboxes.on("click", function(e) {
-						twin_checkboxes.prop("checked", this.checked);
+				//Multiple/Twins checkbox: checkboxes with the same name are checked together (linked once)
+				if (!twinCheckboxesLinked) {
+					twinCheckboxesLinked = true;
+					all('.twin-checkbox').forEach(function(twin){
+						twin_name = twin.getAttribute('name');
+						var twin_checkboxes = all('input[type=checkbox][name="' + twin_name + '"]');
+						twin_checkboxes.forEach((checkbox) => checkbox.addEventListener("click", function(e) {
+							twin_checkboxes.forEach((other) => other.checked = this.checked);
+						}));
 					});
-				});
+				}
 
 				for (let n = 1; n <= LOWER_THIRDS_COUNT; n++) {
 					const lt = lowerThirds[n];
@@ -1720,12 +1778,12 @@
 
 					//Switch Border color and Border thickness ON/OFF
 					lt.border_switch = checked("border-color") ? "true" : "false";
-					$("#alt-" + n + "-border-thickness-amount").toggleClass("disable", !checked("border-color"));
-					$("#alt-" + n + "-style-border-color-appearance").toggleClass("disable", !checked("border-color"));
+					byId("alt-" + n + "-border-thickness-amount").classList.toggle("disable", !checked("border-color"));
+					byId("alt-" + n + "-style-border-color-appearance").classList.toggle("disable", !checked("border-color"));
 
 					//Switch Shadows ON/OFF
 					lt.shadows = checked("shadows") ? "true" : "false";
-					$("#alt-" + n + "-shadow-amount").toggleClass("disable", !checked("shadows"));
+					byId("alt-" + n + "-shadow-amount").classList.toggle("disable", !checked("shadows"));
 
 					//Name and Info text appearance (Uppercase, Bold and Italic)
 					lt.name_transform = checked("name-transform") ? "uppercase" : "normal";
@@ -1744,9 +1802,10 @@
 					fonts[n] = font_select.options[font_select.selectedIndex].value;
 				}
 				for (let n = 1; n <= LOWER_THIRDS_COUNT; n++) {
-					aligns[n] = $('input[name=alt-' + n + '-align]:checked').val();
+					aligns[n] = document.querySelector('input[name=alt-' + n + '-align]:checked')?.value;
 					if (!aligns[n]) {
-						$('#alt-' + n + '-align-left').prop('checked', true).change();
+						byId('alt-' + n + '-align-left').checked = true;
+						fireChange(byId('alt-' + n + '-align-left'));
 					}
 				}
 
@@ -1768,7 +1827,7 @@
 
 					//Shows if custom time settings is used
 					const custom_times = lt.animation_time || (lt.active_time && lt.active_time != 'Infinity') || lt.inactive_time || lt.lock_active || lt.oneshot;
-					$("#alt-" + n + "-custom-times").children(".icon-btn").toggleClass("active", !!custom_times);
+					Array.from(byId("alt-" + n + "-custom-times").children).filter((c) => c.matches(".icon-btn")).forEach((icon) => icon.classList.toggle("active", !!custom_times));
 				}
 
 				//Send all settings to the browser source: lower third N's settings are named alt_N_<setting>
@@ -1785,8 +1844,8 @@
 
 			//Send New Fonts to source
 			function function_send_font() {
-				$.each(fontlist_urls, function(i) {
-					new_font_to_send = fontlist_urls[i];
+				fontlist_urls.forEach(function(font_url) {
+					new_font_to_send = font_url;
 					bcf.postMessage({new_font_to_send});
 				});					
 			}
@@ -1946,45 +2005,46 @@
 				};
 
 				//Selector of a field in every lower third, e.g. everyLowerThird("size") is "#alt-1-size, #alt-2-size, ..."
+				const setTitle = (elements, text) => elements.forEach((element) => element && element.setAttribute("title", text));
 				const everyLowerThird = (field) => lowerThirds.slice(1).map((lt) => "#alt-" + lt.n + "-" + field).join(", ");
 
-				$("#global-animation-time").attr("title", tooltip.global_animation_time);
-				$("#global-active-time").attr("title", tooltip.global_active_time);
-				$("#global-inactive-time").attr("title", tooltip.global_inactive_time);
-				$(everyLowerThird("animation-time")).attr("title", tooltip.animation_time);
-				$(everyLowerThird("active-time")).attr("title", tooltip.active_time);
-				$(everyLowerThird("inactive-time")).attr("title", tooltip.inactive_time);
-				$("#global-lock-active, " + everyLowerThird("lock-active")).parent().attr("title", tooltip.lock_active);
-				$("#global-oneshot, " + everyLowerThird("oneshot")).parent().attr("title", tooltip.oneshot);
+				setTitle(all("#global-animation-time"), tooltip.global_animation_time);
+				setTitle(all("#global-active-time"), tooltip.global_active_time);
+				setTitle(all("#global-inactive-time"), tooltip.global_inactive_time);
+				setTitle(all(everyLowerThird("animation-time")), tooltip.animation_time);
+				setTitle(all(everyLowerThird("active-time")), tooltip.active_time);
+				setTitle(all(everyLowerThird("inactive-time")), tooltip.inactive_time);
+				setTitle(all("#global-lock-active, " + everyLowerThird("lock-active")).map((el) => el.parentElement), tooltip.lock_active);
+				setTitle(all("#global-oneshot, " + everyLowerThird("oneshot")).map((el) => el.parentElement), tooltip.oneshot);
 				
-				$(everyLowerThird("preview")).parent().attr("title", tooltip.preview);
-				$(everyLowerThird("align-left")).next().attr("title", tooltip.align_left);
-				$(everyLowerThird("align-center")).next().attr("title", tooltip.align_center);
-				$(everyLowerThird("align-right")).next().attr("title", tooltip.align_right);
-				$(everyLowerThird("style")).parent().parent().attr("title", tooltip.style);
-				$(everyLowerThird("size")).parent().parent().attr("title", tooltip.size);
-				$(everyLowerThird("margin-h")).parent().parent().attr("title", tooltip.margin);
-				$(everyLowerThird("inverse-ratio")).parent().parent().attr("title", tooltip.text_size);
-				$(everyLowerThird("line-spacing")).parent().parent().attr("title", tooltip.line_spacing);
-				$(everyLowerThird("font")).parent().attr("title", tooltip.font);
-				$(everyLowerThird("logo")).parent().attr("title", tooltip.logo);
-				$(everyLowerThird("logo-size")).parent().attr("title", tooltip.logo_size);
-				$(everyLowerThird("shadows")).parent().attr("title", tooltip.shadow);
-				$(everyLowerThird("shadow-amount")).parent().attr("title", tooltip.shadow_opacity);
-				$(everyLowerThird("background")).parent().attr("title", tooltip.fill_colors);
-				$(everyLowerThird("corners")).parent().parent().attr("title", tooltip.corners);
-				$(everyLowerThird("border-thickness")).parent().attr("title", tooltip.borders);
-				$(everyLowerThird("border-color")).parent().attr("title", tooltip.borders);
-				$(everyLowerThird("border-thickness-amount")).parent().attr("title", tooltip.borders_thinkness);
+				setTitle(all(everyLowerThird("preview")).map((el) => el.parentElement), tooltip.preview);
+				setTitle(all(everyLowerThird("align-left")).map((el) => el.nextElementSibling), tooltip.align_left);
+				setTitle(all(everyLowerThird("align-center")).map((el) => el.nextElementSibling), tooltip.align_center);
+				setTitle(all(everyLowerThird("align-right")).map((el) => el.nextElementSibling), tooltip.align_right);
+				setTitle(all(everyLowerThird("style")).map((el) => el.parentElement).map((el) => el.parentElement), tooltip.style);
+				setTitle(all(everyLowerThird("size")).map((el) => el.parentElement).map((el) => el.parentElement), tooltip.size);
+				setTitle(all(everyLowerThird("margin-h")).map((el) => el.parentElement).map((el) => el.parentElement), tooltip.margin);
+				setTitle(all(everyLowerThird("inverse-ratio")).map((el) => el.parentElement).map((el) => el.parentElement), tooltip.text_size);
+				setTitle(all(everyLowerThird("line-spacing")).map((el) => el.parentElement).map((el) => el.parentElement), tooltip.line_spacing);
+				setTitle(all(everyLowerThird("font")).map((el) => el.parentElement), tooltip.font);
+				setTitle(all(everyLowerThird("logo")).map((el) => el.parentElement), tooltip.logo);
+				setTitle(all(everyLowerThird("logo-size")).map((el) => el.parentElement), tooltip.logo_size);
+				setTitle(all(everyLowerThird("shadows")).map((el) => el.parentElement), tooltip.shadow);
+				setTitle(all(everyLowerThird("shadow-amount")).map((el) => el.parentElement), tooltip.shadow_opacity);
+				setTitle(all(everyLowerThird("background")).map((el) => el.parentElement), tooltip.fill_colors);
+				setTitle(all(everyLowerThird("corners")).map((el) => el.parentElement).map((el) => el.parentElement), tooltip.corners);
+				setTitle(all(everyLowerThird("border-thickness")).map((el) => el.parentElement), tooltip.borders);
+				setTitle(all(everyLowerThird("border-color")).map((el) => el.parentElement), tooltip.borders);
+				setTitle(all(everyLowerThird("border-thickness-amount")).map((el) => el.parentElement), tooltip.borders_thinkness);
 
-				$(everyLowerThird("clean-inputs")).attr("title", tooltip.clean);
-				$(everyLowerThird("autotrigger")).parent().attr("title", tooltip.autotrigger);
-				$(everyLowerThird("autoload")).parent().attr("title", tooltip.autoload);
-				$(everyLowerThird("custom-times")).attr("title", tooltip.custom_times);
+				setTitle(all(everyLowerThird("clean-inputs")), tooltip.clean);
+				setTitle(all(everyLowerThird("autotrigger")).map((el) => el.parentElement), tooltip.autotrigger);
+				setTitle(all(everyLowerThird("autoload")).map((el) => el.parentElement), tooltip.autoload);
+				setTitle(all(everyLowerThird("custom-times")), tooltip.custom_times);
 
-				$("#fonts-options").children().first().attr("title", tooltip.custom_fonts);
-				$(".logos-options").children().first().attr("title", tooltip.default_logos);
-				$("#toggle-preview").attr("title", tooltip.preview_window);
+				setTitle([byId("fonts-options").firstElementChild], tooltip.custom_fonts);
+				setTitle([all(".logos-options").flatMap((options) => Array.from(options.children))[0]], tooltip.default_logos);
+				setTitle(all("#toggle-preview"), tooltip.preview_window);
 				
 				showTitleTooltips();
 			}
@@ -2061,55 +2121,55 @@
 
 
 			function loadData () {
-				$('.storable').each(function(){    
-					var id = $(this).attr('id');
+				all('.storable').forEach(function(field){
+					var id = getAttr(field, 'id');
 					var value = localStorage.getItem(id);
-					var default_value = $(this).attr('value');
+					var default_value = getAttr(field, 'value');
 
 					if(value) {
-						$(this).val(value);
+						field.value = value;
 					} else if (default_value) {
-						$(this).val(default_value);
+						field.value = default_value;
 					}
 				});
 
-				$('.logo-storable').each(function(){    
-					var id = $(this).attr('id');
+				all('.logo-storable').forEach(function(logo){
+					var id = getAttr(logo, 'id');
 					var value = localStorage.getItem(id);
 					if(value != "undefined" && value != ""){
-						$(this).attr('src', value);
+						setAttr(logo, 'src', value);
 					} else {
 						//Set all to default the first time
 						//alt-N-logo-preview and alt-N-logo-default start with the default logo of lower third N
 						var logo_of = id.match(/^alt-(\d+)-logo-(preview|default)$/);
 						if (logo_of && lowerThirds[logo_of[1]]){
-							$(this).attr('src', lowerThirds[logo_of[1]].logo_default);
+							setAttr(logo, 'src', lowerThirds[logo_of[1]].logo_default);
 						}
 					}
 				});
 
-				$('.slot-storable').each(function(){    
-					var id = $(this).attr('id');
+				all('.slot-storable').forEach(function(slot){
+					var id = getAttr(slot, 'id');
 					var value = localStorage.getItem(id);
 
-					$(this).text(value);
+					slot.textContent = value;
 				});
 
-				$('.checkbox-storable, .radio-storable').each(function(){
-                    var id = $(this).attr('id');
+				all('.checkbox-storable, .radio-storable').forEach(function(input){
+                    var id = getAttr(input, 'id');
 					var value = localStorage.getItem(id);
 
 					if (value) {
-						$(this).prop('checked', localStorage.getItem(id) === 'true');
+						input.checked = localStorage.getItem(id) === 'true';
 					}
                 });
 
-				$('.title-storable').each(function(){    
-					var id = $(this).attr('id');
+				all('.title-storable').forEach(function(title){
+					var id = getAttr(title, 'id');
 					var value = localStorage.getItem(id);
 					
 					if (value) {
-						$(this).text(value);
+						title.textContent = value;
 					}
 				});
 
@@ -2121,75 +2181,78 @@
 					okResetPopup();
 				}
 
-	        	$('.storable').change(function(){
+	        	all('.storable').forEach((field) => field.addEventListener('change', function(){
 					refreshData();
-					var id = $(this).attr('id');
-					var value = $(this).val();
+					var id = getAttr(this, 'id');
+					var value = this.value;
 					localStorage.setItem(id, value);
-	        	});
+	        	}));
 
 	        	// Update while input (text or number) is changed
-				$(':input[type=text], :input[type=number]').on('input',function(e){
+				all('input[type=text], input[type=number]').forEach((input) => input.addEventListener('input', function(e){
 					refreshData();
-					var id = $(this).attr('id');
-					var value = $(this).val();
+					var id = getAttr(this, 'id');
+					var value = this.value;
 					localStorage.setItem(id, value);
-				});
+				}));
 
-	        	$('.logo-storable').change(function(){
+	        	all('.logo-storable').forEach((logo) => logo.addEventListener('change', function(){
 					refreshData();
-					var id = $(this).attr('id');
-					var value = $(this).attr('src');
+					var id = getAttr(this, 'id');
+					var value = getAttr(this, 'src');
 					localStorage.setItem(id, value);              
-	        	});
+	        	}));
 
-	        	$('.slot-storable, .title-storable').change(function(){
+	        	all('.slot-storable, .title-storable').forEach((stored) => stored.addEventListener('change', function(){
 					refreshData();
-					var id = $(this).attr('id');
-					var value = $(this).text();
+					var id = getAttr(this, 'id');
+					var value = this.textContent;
 					localStorage.setItem(id, value);
-	        	});
+	        	}));
 
-				$('.checkbox-storable').change(function(){
+				all('.checkbox-storable').forEach((checkbox) => checkbox.addEventListener('change', function(){
 					refreshData();
-					var id = $(this).attr('id');
-					localStorage.setItem(id, $(this).is(':checked'));
+					var id = getAttr(this, 'id');
+					localStorage.setItem(id, this.checked);
 
-					// Check for a twin chekcbox
-					if ($(this).hasClass('twin-checkbox')) {
-						const twin =$(this).parents('.grid-row').find('.twin-checkbox').not(this);
-						id = twin.attr('id');
-						localStorage.setItem(id, twin.is(':checked'));
+					// Check for a twin chekcbox: the other .twin-checkbox in the .grid-row(s) around it
+					if (hasClass(this, 'twin-checkbox')) {
+						const twins = [];
+						for (let row = this.closest('.grid-row'); row; row = row.parentElement.closest('.grid-row')) {
+							all('.twin-checkbox', row).forEach((twin) => twin !== this && !twins.includes(twin) && twins.push(twin));
+						}
+						id = twins.length ? getAttr(twins[0], 'id') : undefined;
+						localStorage.setItem(id, twins.some((twin) => twin.checked));
 					}
-				});
+				}));
 
-				$('.radio-storable').change(function(){
+				all('.radio-storable').forEach((radio) => radio.addEventListener('change', function(){
 					refreshData();
-					var radio_name = $(this).attr('name');
-					$(':input[name=' + radio_name + ']').each(function(){
-						var id = $(this).attr('id');
-						localStorage.setItem(id, $(this).is(':checked'));
+					var radio_name = getAttr(this, 'name');
+					all('input, select, textarea, button').filter((field) => field.getAttribute('name') == radio_name).forEach(function(field){
+						var id = getAttr(field, 'id');
+						localStorage.setItem(id, field.checked);
 					});
-				});
+				}));
 
-				$('.font-storable, .select-settings-storable').change(function(){
+				all('.font-storable, .select-settings-storable').forEach((select) => select.addEventListener('change', function(){
 					refreshData();
-					var id =  $(this).attr('id');
+					var id =  getAttr(this, 'id');
 					localStorage.setItem(id, this.value);
-				});
+				}));
 
 				/**
 				 * Indirect changes
  				 */
-				$(':button').on('click',function(e){
+				all('button, input[type=button]').forEach((button) => button.addEventListener('click', function(e){
 					// Lanza evento de cambio del input superior
-					$(this).parent().find('input').change()
-				});
+					all('input', this.parentElement).forEach(fireChange);
+				}));
 
-				$('.slot-number').on('click',function(e){
+				all('.slot-number').forEach((number) => number.addEventListener('click', function(e){
 					// Lanza evento de cambio de los divs hermanos
-					$(this).siblings('.slot-storable').change();
-				});
+					Array.from(this.parentElement.children).filter((sibling) => sibling !== this && sibling.matches('.slot-storable')).forEach(fireChange);
+				}));
 			}
 
 			function refreshData() {
@@ -2219,8 +2282,8 @@
 			setInterval(() => checkUpdates(), 200);
 
 			// Wait document to be ready to do some stuff
-			$( document ).ready(function() {
-				$('#defaultTab').click();
+			document.addEventListener("DOMContentLoaded", function() {
+				byId('defaultTab').click();
 			});
 
 		</script>
