@@ -7,7 +7,6 @@
 	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
     <title>Lower thirds Source</title>
 	<link rel="stylesheet" href="../common/css/style-source.css">
-	<script src="../common/js/jquery.js"></script>
 
  </head>
   <body class="browser-source lower-thirds">
@@ -162,10 +161,10 @@
 		//Show or hide the logo if the logo switch is ON.
 		function changeLogoVisibility(lt, logo_switch, logo_image) {
 			if (logo_switch == "true") {
-				$("#alt-" + lt.n + "-logo").removeClass("no-logo");
+				document.getElementById("alt-" + lt.n + "-logo").classList.remove("no-logo");
 				loadLogo("alt-" + lt.n + "-logo-image", logo_image);
 			} else {
-				$("#alt-" + lt.n + "-logo").addClass("no-logo");
+				document.getElementById("alt-" + lt.n + "-logo").classList.add("no-logo");
 				loadLogo("alt-" + lt.n + "-logo-image");
 			}
 		}
@@ -336,15 +335,13 @@
 			new_font = received_data.new_font_to_send;
 
 			//console.log(new_font);
-			$('head').append('<style>' + new_font + '</style>');
+			const style = document.createElement("style");
+			style.textContent = new_font;
+			document.head.appendChild(style);
 		}
 
 		function loadLogo(alt,logo) {
-			if(logo){
-				$('#'+alt).attr("src", logo);
-			} else {
-				$('#'+alt).attr("src", '//:0');
-			}
+			document.getElementById(alt).setAttribute("src", logo ? logo : '//:0');
 		}
 
 

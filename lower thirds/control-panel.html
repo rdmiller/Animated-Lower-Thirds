@@ -12,7 +12,6 @@
 		<script src="../common/js/jquery.js"></script>
 		<script src="../common/js/jscolor.js"></script>
 		<script src="../common/js/hotkeys.js"></script>
-		<script src="../common/js/jquery-ui.js"></script>
 	</head>
 	<body class="lower-thirds-panel panel">
 		<div id="alt-panel" class="static-panel-top" style="margin-bottom: 0px">
@@ -851,26 +850,102 @@
 
 			//////////////////
 
-		    $( "#sortable" ).sortable({handle: ".drag-handle"});
-		    $( "#sortable" ).on("sortupdate",function( event, ui ) {
-		        var sorted = $( this ).sortable( "serialize");
-		        localStorage.setItem('sorted', sorted);
-		    });
-		    
-		    if(localStorage.getItem("sorted") !== null){
-		      var arrValuesForOrder = localStorage.getItem('sorted').substring(6).split("&alt[]=");
-		      var $ul = $("#sortable");
-		      $items = $("#sortable").children();
+			//Reorder the lower thirds by dragging their title bar (.drag-handle).
+			//The order is saved as "alt[]=3&alt[]=1&alt[]=4&alt[]=2" (the panel ids are alt_1 to alt_4).
+			(function () {
+				const list = document.getElementById("sortable");
+				let item = null;        //Panel being dragged
+				let handle = null;      //Its title bar, which receives the pointer events during the drag
+				let placeholder = null; //Dashed box showing where it will drop
+				let start = null;       //Pointer position when pressed, until the drag starts
+				let grab_offset = 0;    //Distance from the top of the panel to the pointer
 
-		      // loop backwards so you can just prepend elements in the list
-		      // instead of trying to place them at a specific position
-		      for (var i = arrValuesForOrder.length - 1; i >= 0; i--) {
-		        // index is zero-based to you have to remove one from the values in your array
-		        $ul.prepend( $items.get((arrValuesForOrder[i] - 1)));
-		      }
-		    }
+				const order = () => Array.from(list.children).filter((el) => el !== placeholder).map((el) => el.id);
 
-		    $( "#sortable" ).disableSelection();
+				list.addEventListener("pointerdown", function (e) {
+					handle = e.target.closest(".drag-handle");
+					if (e.button !== 0 || !handle || e.target.closest("input, textarea, button, select, option")) {
+						return;
+					}
+					item = handle.closest("#sortable > *");
+					start = {x: e.clientX, y: e.clientY, order: order().join()};
+				});
+
+				list.addEventListener("pointermove", function (e) {
+					if (!item) {
+						return;
+					}
+					//Start dragging once the pointer moves, so clicks and double clicks (rename) still work
+					if (!placeholder) {
+						if (Math.abs(e.clientX - start.x) < 1 && Math.abs(e.clientY - start.y) < 1) {
+							return;
+						}
+						const rect = item.getBoundingClientRect();
+						grab_offset = start.y - rect.top;
+						placeholder = document.createElement(item.tagName);
+						placeholder.className = item.className + " ui-sortable-placeholder";
+						placeholder.style.height = rect.height + "px";
+						item.before(placeholder);
+						item.classList.add("ui-sortable-helper");
+						Object.assign(item.style, {position: "fixed", zIndex: 1000, left: rect.left + "px", width: rect.width + "px", height: rect.height + "px"});
+						handle.setPointerCapture(e.pointerId);
+					}
+					item.style.top = (e.clientY - grab_offset) + "px";
+
+					//Move the placeholder before the first panel whose middle is below the pointer
+					const next = Array.from(list.children).find((el) => {
+						if (el === item || el === placeholder) {
+							return false;
+						}
+						const rect = el.getBoundingClientRect();
+						return e.clientY < rect.top + rect.height / 2;
+					});
+					list.insertBefore(placeholder, next || null);
+
+					//Scroll when dragging near the top or bottom of the dock
+					if (e.clientY < 30) {
+						window.scrollBy(0, -10);
+					} else if (e.clientY > window.innerHeight - 30) {
+						window.scrollBy(0, 10);
+					}
+				});
+
+				function drop() {
+					if (placeholder) {
+						item.classList.remove("ui-sortable-helper");
+						Object.assign(item.style, {position: "", zIndex: "", left: "", width: "", height: "", top: ""});
+						placeholder.replaceWith(item);
+						placeholder = null;
+						if (order().join() != start.order) {
+							localStorage.setItem('sorted', order().map((id) => "alt[]=" + id.split("_")[1]).join("&"));
+						}
+					}
+					item = null;
+				}
+				list.addEventListener("pointerup", drop);
+				list.addEventListener("pointercancel", drop);
+
+				//Don't select the panels' text while dragging, but still allow selecting inside text fields
+				list.addEventListener("selectstart", (e) => {
+					if (!e.target.closest || !e.target.closest("input, textarea")) {
+						e.preventDefault();
+					}
+				});
+			})();
+
+			if(localStorage.getItem("sorted") !== null){
+			  var arrValuesForOrder = localStorage.getItem('sorted').substring(6).split("&alt[]=");
+			  var $ul = $("#sortable");
+			  $items = $("#sortable").children();
+
+			  // loop backwards so you can just prepend elements in the list
+			  // instead of trying to place them at a specific position
+			  for (var i = arrValuesForOrder.length - 1; i >= 0; i--) {
+			    // index is zero-based to you have to remove one from the values in your array
+			    $ul.prepend( $items.get((arrValuesForOrder[i] - 1)));
+			  }
+			}
+
 		    /*
 		    //Reset order button
 		    $("#clear").click(function(){
@@ -1760,6 +1835,76 @@
 				updateMoreMaxHeight()
 			}
 
+			//Show an element's title as a tooltip after a short delay. "<br>" in a title starts a new line.
+			//The tooltip is styled by the .ui-tooltip rules of the control panel css.
+			function showTitleTooltips() {
+				let target = null;  //Element whose title is shown (its title attribute is moved to data-title meanwhile)
+				let tooltip = null;
+				let timer;
+
+				function hide() {
+					clearTimeout(timer);
+					if (target) {
+						target.setAttribute("title", target.dataset.title);
+						delete target.dataset.title;
+						target = null;
+					}
+					if (tooltip) {
+						tooltip.remove();
+						tooltip = null;
+					}
+				}
+
+				function show() {
+					tooltip = document.createElement("div");
+					tooltip.className = "ui-tooltip ui-corner-all ui-widget-shadow ui-widget ui-widget-content";
+					tooltip.setAttribute("role", "tooltip");
+					const content = document.createElement("div");
+					content.className = "ui-tooltip-content";
+					target.dataset.title.split(/<br\s*\/?>/i).forEach((line, i) => {
+						if (i > 0) {
+							content.appendChild(document.createElement("br"));
+						}
+						content.appendChild(document.createTextNode(line));
+					});
+					tooltip.appendChild(content);
+					document.body.appendChild(tooltip);
+
+					//Below the element, 15px apart, kept inside the window; above it if there is no room below
+					const rect = target.getBoundingClientRect();
+					let top = rect.bottom + 15;
+					if (top + tooltip.offsetHeight > window.innerHeight && rect.top - 15 - tooltip.offsetHeight >= 0) {
+						top = rect.top - 15 - tooltip.offsetHeight;
+					}
+					const left = Math.max(0, Math.min(rect.left, document.documentElement.clientWidth - tooltip.offsetWidth));
+					tooltip.style.left = (left + window.scrollX) + "px";
+					tooltip.style.top = (top + window.scrollY) + "px";
+					tooltip.animate([{opacity: 0}, {opacity: 1}], {duration: 200});
+
+					//Fade out when the pointer goes over the tooltip, to see what is behind it
+					tooltip.addEventListener("mouseenter", () => tooltip.animate([{opacity: 0.2}], {duration: 600, fill: "forwards"}));
+				}
+
+				document.addEventListener("mouseover", function (e) {
+					if (target && target.contains(e.target)) {
+						return;
+					}
+					hide();
+					const element = e.target.closest("[title]");
+					if (element && element.getAttribute("title")) {
+						target = element;
+						target.dataset.title = target.getAttribute("title");
+						target.removeAttribute("title"); //Hide the browser's own tooltip
+						timer = setTimeout(show, 600);
+					}
+				});
+				document.addEventListener("mouseout", function (e) {
+					if (target && !target.contains(e.relatedTarget)) {
+						hide();
+					}
+				});
+			}
+
 			//Create Tooltips to show settings info
 			function settingsTooltips (){
 				const tooltip = {
@@ -1841,19 +1986,7 @@
 				$(".logos-options").children().first().attr("title", tooltip.default_logos);
 				$("#toggle-preview").attr("title", tooltip.preview_window);
 				
-				$(document).tooltip({  
-					show: { delay: 600, duration: 200 },
-					open: function(event, ui)  
-					{  
-						ui.tooltip.hover(  
-						function () {  
-							$(this).fadeTo("slow", 0.2);  
-						});  
-					},
-					content: function() {
-						return $(this).attr("title");
-					}
-				});
+				showTitleTooltips();
 			}
 
 			//Read all localstorage data
