@@ -266,21 +266,49 @@ body.browser-source.lower-thirds{
   transition: background 0.5s;
 }
 
-#alt-1-config-content.active,
-#alt-2-config-content.active,
-#alt-3-config-content.active,
-#alt-4-config-content.active {
-  box-shadow: 0px 0px 2px 0px rgb(222, 240, 255),
-              0px 0px 12px 0px rgb(0,149,255);
-  border-radius: 3px;
-}
-#alt-1-config-content.inactive,
-#alt-2-config-content.inactive,
-#alt-3-config-content.inactive,
-#alt-4-config-content.inactive {
+/* Tally of each lower third, as in broadcast: red when it is on air (on screen),
+   amber when its switch is on but it is waiting off screen. The badge says it in words too. */
+.sortees > [id$="-config-content"].active {
   box-shadow: 0px 0px 2px 0px rgb(255,231,231),
               0px 0px 12px 0px rgb(255,13,13);
   border-radius: 3px;
+}
+.sortees > [id$="-config-content"].inactive {
+  box-shadow: 0px 0px 2px 0px rgb(255,244,222),
+              0px 0px 12px 0px rgb(255,166,0);
+  border-radius: 3px;
+}
+.sortees > .active .drag-handle::after,
+.sortees > .inactive .drag-handle::after {
+  position: absolute;
+  top: 5px;
+  right: 22px;
+  padding: 0 4px;
+  border-radius: 3px;
+  font-size: 9px;
+  font-weight: 900;
+  line-height: 15px;
+  letter-spacing: 0.5px;
+}
+/* Keep a long title clear of the badge */
+.sortees > .active .drag-handle > .renameable,
+.sortees > .inactive .drag-handle > .renameable {
+  min-width: 0;
+  max-width: calc(100% - 100px);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  vertical-align: top;
+}
+.sortees > .active .drag-handle::after {
+  content: "ON AIR";
+  background: rgb(230,0,0);
+  color: #ffffff;
+}
+.sortees > .inactive .drag-handle::after {
+  content: "STANDBY";
+  background: rgb(255,166,0);
+  color: #000000;
 }
 
 .panel-bottom > ul {
