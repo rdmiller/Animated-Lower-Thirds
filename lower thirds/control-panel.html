@@ -318,6 +318,11 @@
 										<input class="storable" id="alt-{n}-info-color" data-jscolor="{width:100, padding:5, borderRadius:3, borderWidth:0, controlBorderWidth:0, backgroundColor:'#1f1e1f', position:'right', shadow:true, previewSize:60}" value="">
 									</div>	
 									<div style="clear:both"></div>
+									<div id="alt-{n}-take-bar" class="take-bar hide" role="status">
+										<span>Edited, not on air yet</span>
+										<button type="button" id="alt-{n}-revert" class="take-bar-btn" title="Discard the edit (Esc)">Undo</button>
+										<button type="button" id="alt-{n}-take" class="take-bar-btn take" title="Put the edited text on air (Enter)">Take ⏎</button>
+									</div>
 								</div>
 							</div>
 							<div class="panel-bottom">
@@ -1041,6 +1046,7 @@
 				}
 
 				//Check switches and blue and red lights in the background to see active and inactive times
+				let apply_edits = false;
 				for (let n = 1; n <= LOWER_THIRDS_COUNT; n++) {
 					const lt = lowerThirds[n];
 					const config_content = document.getElementById("alt-" + n + "-config-content");
@@ -1071,6 +1077,21 @@
 							jumpNextSlot(slots.memory_slot, slots.name, slots.info, slots.logo, lt.waiting_time);
 						}
 					}
+
+					//A pending edit is applied when the lower third has been off screen for its whole
+					//exit animation, so viewers never see the text change
+					if (config_content.classList.contains("active")) {
+						lt.off_air_since = null;
+					} else if (lt.off_air_since == null) {
+						lt.off_air_since = Date.now();
+					}
+					if (lt.pending && lt.off_air_since != null && Date.now() - lt.off_air_since >= (Number(lt.waiting_time || 0) + 1) * 1000) {
+						setPending(n, false);
+						apply_edits = true;
+					}
+				}
+				if (apply_edits) {
+					function_send();
 				}
 			}
 
@@ -1445,6 +1466,7 @@
 
 					document.querySelector(name).value = name_to_load;
 					document.querySelector(info).value = info_to_load;
+					setPending(Number(name.match(/alt-(\d+)-name/)[1]), false);
 					if (logo_to_load == "default") {
 						logo_to_load = default_logo_value;
 					}
@@ -1466,6 +1488,77 @@
 			}
 
 			//////////////////////////////////////
+
+			//Edit, then take: while a lower third is on air, typing in its Name or Info changes a pending
+			//text, and the text on air stays until Enter or Take (Escape or Undo discards the edit).
+			//Pending edits are applied by themselves once the lower third is off screen.
+			//Loading a memory slot and the clear button still apply right away.
+			const isOnAir = (n) => byId("alt-" + n + "-config-content").classList.contains("active");
+
+			function showPending(n) {
+				const lt = lowerThirds[n];
+				byId("alt-" + n + "-take-bar").classList.toggle("hide", !lt.pending);
+				["name", "info"].forEach((field) => {
+					const input = byId("alt-" + n + "-" + field);
+					input.classList.toggle("pending", !!lt.pending && input.value != lt["live_" + field]);
+				});
+			}
+
+			function setPending(n, pending) {
+				lowerThirds[n].pending = pending;
+				showPending(n);
+			}
+
+			//Put the edited text on air
+			function takeEdit(n) {
+				setPending(n, false);
+				refreshData();
+			}
+
+			//Put the text on air back into the fields
+			function revertEdit(n) {
+				const lt = lowerThirds[n];
+				setPending(n, false);
+				["name", "info"].forEach((field) => {
+					byId("alt-" + n + "-" + field).value = lt["live_" + field];
+					fireChange(byId("alt-" + n + "-" + field));
+				});
+			}
+
+			for (let n = 1; n <= LOWER_THIRDS_COUNT; n++) {
+				const lt = lowerThirds[n];
+				["name", "info"].forEach((field) => {
+					const input = byId("alt-" + n + "-" + field);
+					//(These listeners are added before the ones that save and send the fields.)
+					input.addEventListener("input", function() {
+						if (!lt.pending && isOnAir(n)) {
+							lt.live_name = lt.name;
+							lt.live_info = lt.info;
+							lt.pending = true;
+						}
+						//Typing the text on air back is not an edit anymore
+						if (lt.pending && byId("alt-" + n + "-name").value == lt.live_name && byId("alt-" + n + "-info").value == lt.live_info) {
+							lt.pending = false;
+						}
+						showPending(n);
+					});
+					//A change made by the panel itself (memory slot, clear button) applies right away
+					input.addEventListener("change", function(e) {
+						if (!e.isTrusted && lt.pending) {
+							setPending(n, false);
+						}
+					});
+					input.addEventListener("keydown", function(e) {
+						if (e.key === "Enter" && lt.pending) {
+							takeEdit(n);
+						} else if (e.key === "Escape" && lt.pending) {
+							revertEdit(n);
+						}
+					});
+				});
+				byId("alt-" + n + "-take").addEventListener("click", () => takeEdit(n));
+				byId("alt-" + n + "-revert").addEventListener("click", () => revertEdit(n));
+			}
 
 			//Button to clear fields
 			for (let n = 1; n <= LOWER_THIRDS_COUNT; n++) {
@@ -1624,8 +1717,13 @@
 
 					lt.lock_active = (document.getElementById("alt-" + n + "-lock-active").checked) ? true : false;
 
-					lt.name = text("name");
-					lt.info = text("info");
+					if (lt.pending) {
+						lt.name = lt.live_name;
+						lt.info = lt.live_info;
+					} else {
+						lt.name = text("name");
+						lt.info = text("info");
+					}
 					lt.name_color = text("name-color");
 					lt.info_color = text("info-color");
 					lt.style_color_1 = text("style-color-1");
